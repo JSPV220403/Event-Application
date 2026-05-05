@@ -1,0 +1,12 @@
+model Sold_Tickets{
+  id String @id @default(uuid())
+  schedule_id String 
+  user_id String
+  seat_count Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean @default(false)
+
+  schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
+  user Users @relation(fields: [user_id], references: [id])
+}

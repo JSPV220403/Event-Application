@@ -1,0 +1,11 @@
+enum Gender{
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Role{
+  USER
+  ADMIN
+  ORGANIZER
+}

@@ -1,0 +1,12 @@
+model Approvals{
+  id String @id @default(uuid())
+  user_id String
+  event_id String
+  approved_by String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  requester Users @relation("RequestedBy",fields: [user_id], references: [id])
+  approver Users @relation("ApprovedBy",fields: [approved_by], references: [id])
+  events Events @relation(fields: [event_id], references: [id])
+}

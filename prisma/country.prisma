@@ -1,0 +1,10 @@
+model Countries{
+  id String @id @default(uuid())
+  name String @db.VarChar(50)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  state States[]
+  address Addresses[]
+
+}
