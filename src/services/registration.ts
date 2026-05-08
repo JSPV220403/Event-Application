@@ -1,9 +1,13 @@
 import {prisma} from "../prisma"
 
-async function main() {
-  const users = await prisma.users.findMany();
+export const registration = async(data: any)=>{
+  const user = await prisma.users.create({
+    data:{
+      "name": data.name,
 
-  console.log(users);
+      }
+  })
+  console.log(user)
 }
 
-main();
+//registration({})
