@@ -5,6 +5,7 @@ import {prisma} from "../prisma"
 import {Role, Gender} from "@prisma/client"
 
 import {generateToken} from "../utils/jwt"
+import { connect } from "node:http2"
 
 
 export const register = async(data:any)=>{
@@ -33,15 +34,48 @@ export const register = async(data:any)=>{
                email:data.email,
                password: hashedPassword,
                role: data.role==='USER'? Role.USER: data.role==='ADMIN'? Role.ADMIN: Role.ORGANIZER,
-               is_active: false
             }
         })
+        const user_id = await prisma.users.findUnique({
+            where:{
+                email: data.email
+            },
+            select:{
+                id:true
+            }
+        })
+        const address= await prisma.addresses.create({
+            data:{
+                
+                address: data.address,
+                pincode: data.pincode,
+
+                user:{
+                    connect:{
+                        id: user_id?.id
+                    }
+                }
+            }
+        })
+
+        if(data.role==="ADMIN" || data.role==="ORGANIZER"){
+            const approvals = await prisma.approvals.create(
+                {
+                    data:{
+                        user_id: user_id?.id,
+                    }
+                }
+            )
+            
+        }
 
         return{
             success: true,
             status: 200,
             message: "User Registered",
-            data: user
+            data: {
+                user_id: user?.id
+            }
         }
 
     }catch(e){
@@ -98,3 +132,4 @@ export const login= async(data:any)=>{
         }
     }
 }
+

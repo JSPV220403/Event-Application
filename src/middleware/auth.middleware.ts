@@ -15,9 +15,9 @@ const authmiddleware= async(req:Request, res:Response,next:NextFunction)=>{
 
         const token = authHeader.split(" ")[1]
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
 
-        ;(req as any).user=decoded
+        (req as any).user=decoded
 
         next()
     }

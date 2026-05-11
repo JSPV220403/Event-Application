@@ -13,35 +13,35 @@ datasource db {
 
 model Addresses{
   id String @id @default(uuid())
-  user_id String
-  schedule_id String
+  user_id String?
+  schedule_id String?
   address String @db.VarChar(255)
   pincode String @db.VarChar(12)
-  district_id String
-  state_id String
-  country_id String
+  district_id String?
+  state_id String?
+  country_id String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
-  user Users @relation(fields: [user_id], references: [id])
-  schedules Event_Schedules @relation(fields: [schedule_id], references: [id])
-  district Districts @relation(fields: [district_id], references: [id])
-  state States @relation(fields: [state_id], references: [id])
-  country Countries @relation(fields: [country_id], references: [id])
+  user Users? @relation(fields: [user_id], references: [id])
+  schedules Event_Schedules? @relation(fields: [schedule_id], references: [id])
+  district Districts? @relation(fields: [district_id], references: [id])
+  state States? @relation(fields: [state_id], references: [id])
+  country Countries? @relation(fields: [country_id], references: [id])
 }
 
 model Approvals{
   id String @id @default(uuid())
-  user_id String
-  event_id String
-  approved_by String
+  user_id String?
+  event_id String?
+  approved_by String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  requester Users @relation("RequestedBy",fields: [user_id], references: [id])
-  approver Users @relation("ApprovedBy",fields: [approved_by], references: [id])
-  events Events @relation(fields: [event_id], references: [id])
+  requester Users? @relation("RequestedBy",fields: [user_id], references: [id])
+  approver Users? @relation("ApprovedBy",fields: [approved_by], references: [id])
+  events Events? @relation(fields: [event_id], references: [id])
 }
 
 model Categories{
@@ -50,7 +50,7 @@ model Categories{
   created_by String 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
   user Users @relation(fields: [created_by], references: [id])
 }
@@ -98,9 +98,9 @@ model Event_Schedules{
   price Decimal @db.Decimal(10,2)
   venue_capacity Int
   map String
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
-  event Events[]
+  event Events @relation(fields: [event_id], references: [id])
   soldTicket Sold_Tickets[]
   address Addresses[]
 }
@@ -112,7 +112,7 @@ model Events{
   description String
   category_id String
   organizer_id String
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
   schedule Event_Schedules[]
   approval Approvals[]
@@ -125,7 +125,7 @@ model Sold_Tickets{
   seat_count Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
   schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
   user Users @relation(fields: [user_id], references: [id])
@@ -147,15 +147,15 @@ model States{
 model Users{
   id String @id @default(uuid())
   image_url String?
-  name String? @db.VarChar(50)
-  gender Gender?
-  phone_number String? @db.VarChar(16)
-  email String? @unique @db.VarChar(255)
-  password String?
-  role Role?
+  name String @db.VarChar(50)
+  gender Gender
+  phone_number String @db.VarChar(16)
+  email String @unique @db.VarChar(255)
+  password String
+  role Role
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  is_active Boolean @default(false)
+  is_active Boolean @default(true)
 
   requested_approvals Approvals[] @relation("RequestedBy")
   approved_approvals Approvals[] @relation("ApprovedBy")
