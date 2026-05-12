@@ -8,6 +8,6 @@ const router= express.Router()
 router.post("/eventList", authmiddleware,controller.evenList)
 router.get("/bookTicket", authmiddleware, controller.bookTicket);
 router.get("/cancelTicket", authmiddleware,controller.cancelTicket);
-router.get("/bookHistory",authmiddleware, controller.bookHistory)
+router.get("/bookHistory", authmiddleware, controller.bookHistory)
 
 export default router

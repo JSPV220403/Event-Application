@@ -53,6 +53,7 @@ model Categories{
   is_active Boolean @default(true)
 
   user Users @relation(fields: [created_by], references: [id])
+  event Events[]
 }
 
 model Countries{
@@ -92,12 +93,12 @@ enum Role{
 model Event_Schedules{
   id String @id @default(uuid())
   event_id String
-  image_url String
+  image_url String?
   date DateTime @db.Date
   time DateTime @db.Time()
   price Decimal @db.Decimal(10,2)
   venue_capacity Int
-  map String
+  map String?
   is_active Boolean @default(true)
 
   event Events @relation(fields: [event_id], references: [id])
@@ -107,7 +108,7 @@ model Event_Schedules{
 
 model Events{
   id String @id @default(uuid())
-  image_url String
+  image_url String?
   name String @db.VarChar(50)
   description String
   category_id String
@@ -116,6 +117,8 @@ model Events{
 
   schedule Event_Schedules[]
   approval Approvals[]
+  category Categories @relation(fields: [category_id], references: [id])
+  organizer Users @relation(fields: [organizer_id], references: [id])
 }
 
 model Sold_Tickets{
@@ -162,4 +165,5 @@ model Users{
   address Addresses[]
   category Categories[]
   soldTicket Sold_Tickets[]
+  event Events[]
 }

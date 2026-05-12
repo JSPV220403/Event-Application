@@ -2,27 +2,81 @@ import {prisma} from "../prisma"
 
 export const eventList = async(data:any)=>{
     try{
+
+        let page = data?.page??1;
+
+        let limit = data?.limit??10;
+
         const res= await prisma.events.findMany({
             where:{
                 is_active: true,
+
                 approval:{
                     some:{
                         approved_by:{
                             not:null
                         }
                     }
-                }
+                },
+
+                
+
+                category_id: data.category_id||undefined,
+
+                organizer_id: data.organizer_id||undefined,
+
+                OR:[
+
+                    {
+                        name:{
+                            contains:data.search||"",
+                            mode: "insensitive"
+                        }
+                    },
+                    {
+                        description:{
+                            contains:data.search||"",
+                            mode: "insensitive"
+                        }
+                    },
+                    {
+                        category:{
+                            name:{
+                                contains: data.search||"",
+                                mode:"insensitive"
+                            }
+                        }
+                    },
+                    {
+                        organizer:{
+                            name:{
+                                contains: data.search||"",
+                                mode:"insensitive"
+                            }
+                        }
+                    }
+                ]
+                
             },
+
+            skip: (page-1)*limit,
+            take: limit,
             include:{
-                schedule: true,
+                schedule: {
+                    where:{
+                        is_active:true
+                    }
+                },
                 //approval: true
             }
         })
+
         return {
             staus: 200,
             message: "Successfull",
             data: res
         }
+
     }
     catch(e){
         console.log(e)
@@ -55,7 +109,7 @@ export const bookTicket = async(data:any, user: any)=>{
     })
     let sold_seats= tickets_sold._sum.seat_count??0;
 
-    if(total_tickets?.venue_capacity! < sold_seats + data?.seats){
+    if(total_tickets?.venue_capacity! >= sold_seats + data?.seats){
         const res= await prisma.sold_Tickets.create(
             {
                 data:{
@@ -129,6 +183,7 @@ export const bookHistory = async(user: any)=>{
         const history= await prisma.sold_Tickets.findMany({
             where:{
                 user_id: user?.id,
+                is_active:true
             },
             include:{
                 schedule:{
@@ -143,7 +198,7 @@ export const bookHistory = async(user: any)=>{
             return{
                 status:200,
                 message:"You not booked anything yet",
-                data:{}
+                data:[]
             }
         }
 
@@ -163,4 +218,3 @@ export const bookHistory = async(user: any)=>{
     }
     
 }
-

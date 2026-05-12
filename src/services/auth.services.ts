@@ -114,7 +114,7 @@ export const login= async(data:any)=>{
             }
         }
 
-        const token= generateToken(user)
+        const token= await generateToken(user)
 
         return {
             success: true,
