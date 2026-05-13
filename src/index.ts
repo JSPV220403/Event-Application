@@ -5,8 +5,6 @@ import router from "./router"
 
 const app = express()
 
-const route = express.Router()
-
 app.use(express.json())
 
 app.use("/api", router)

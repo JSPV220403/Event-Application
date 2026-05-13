@@ -16,7 +16,7 @@ export const generateToken=async(data:any)=>{
             id: data.id,
             email: data.email,
             role: data.role,
-            status: user?.approved_by!=null?"APPROVED":"PENDING"
+            status: user==null?"PENDING":user?.approved_by!=null?"APPROVED":"PENDING"
 
         },
         process.env.JWT_SECRET!,

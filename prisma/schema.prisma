@@ -33,8 +33,8 @@ model Addresses{
 
 model Approvals{
   id String @id @default(uuid())
-  user_id String?
-  event_id String?
+  user_id String? @unique
+  event_id String? @unique
   approved_by String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
