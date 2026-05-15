@@ -40,7 +40,7 @@ export const createEvent = async(data:any, user:any)=>{
             const schedule= await prisma.event_Schedules.create({
                 data:{
                     date: new Date(items?.date),
-                    time: new Date(items?.time),
+                    time: items?.time,
                     price: items?.price,
                     venue_capacity: items?.venue_capacity,
                     event:{
@@ -66,7 +66,7 @@ export const createEvent = async(data:any, user:any)=>{
         }
 
         return {
-            status: 400,
+            status: 200,
             message: "Successfully created and waiting for admin approval"
         }
     }catch(e){
@@ -113,7 +113,7 @@ export const addSchedule = async(data:any, user:any)=>{
             const schedule= await prisma.event_Schedules.create({
                 data:{
                     date: new Date(items?.date),
-                    time: new Date(items?.time),
+                    time: items?.time,
                     price: items?.price,
                     venue_capacity: items?.venue_capacity,
                     event:{
@@ -303,83 +303,167 @@ export const cancelEvent = async(data:any, user:any)=>{
     }
 }
 
-export const createCategory = async(data:any, user:any)=>{
+export const eventList = async(data:any,user:any)=>{
     try{
-        if(user?.status=="PENDING"){
+
+        if((user?.role == "ADMIN" || user?.role =="ORGANIZER") && user?.status == "PENDING" && data?.filter!="public"){
             return {
                 status: 401,
-                message: "you are not ADMIN/ORGANIZER"
+                message: "UnAthorized Person",
+                data:[]
             }
         }
-        
-            const category= await prisma.categories.create({
-                data:{
-                    name: data?.name,
-                    user:{
-                        connect:{
-                            id:user?.id
+        let filter = data?.filter??"public"
+        let search= data?.search??"";
+        let whereCondition:any={ 
+            is_active: true
+        }
+
+        whereCondition.category={
+            is_active: true
+        }
+
+        if(data?.search){
+            whereCondition.OR=[
+                {
+                    name: {
+                        contains:search,
+                        mode: "insensitive"
+                    }
+                },
+
+                {
+                    description: {
+                        contains:search,
+                        mode: "insensitive"
+                    }   
+                },
+            ]
+        }
+
+        if(data?.category_id){
+            whereCondition.category={
+                id:  data?.category_id,
+            }
+        }
+
+        if(data?.time || data?.date){
+            whereCondition.schedule={
+                some:{
+                    date: data?.date?new Date(data?.date):undefined,
+                    time: data?.time??undefined,
+                    is_active:true
+                }
+            }
+        }
+
+        if(user?.role=="USER"){
+            whereCondition.approval={
+                some:{
+                    approved_by:{
+                        not:null
+                    }
+                }
+            }
+        }
+
+        else if(user?.role=="ORGANIZER"){
+            if(filter == "all"){
+                
+                whereCondition.organizer_id= user?.id;
+            }
+            else if(filter=="approved"){
+                
+                whereCondition.organizer_id= user?.id,
+                whereCondition.approval={
+                    some:{
+                        approved_by:{
+                            not:null,
                         }
                     }
                 }
-            })
-            return {
-                status: 200,
-                message: "Category created"
             }
-        
+            else if(filter == "unapproved"){
+                
+                whereCondition.organizer_id= user?.id,
+                whereCondition.approval={
+                    some:{
+                        approved_by:null,
+                    }
+                }
+            }
+            else if(filter == "public"){
+                whereCondition.approval={
+                    some:{
+                        approved_by:{
+                            not: null,
+                        }
+                    }
+                }
+            }
+        }
+
+        else if(user?.role=="ADMIN"){
+            if(filter == "all"){
+                
+            }
+            else if(filter=="approved"){
+                
+                //whereCondition.organizer_id= user?.id,
+                whereCondition.approval={
+                    some:{
+                        approved_by:{
+                            not:null,
+                        }
+                    }
+                }
+            }
+            else if(filter == "unapproved"){
+                
+                //whereCondition.organizer_id= user?.id,
+                whereCondition.approval={
+                    some:{
+                        approved_by:null,
+                    }
+                }
+            }
+            else if(filter == "public"){
+                whereCondition.approval={
+                    some:{
+                        approved_by:{
+                            not: null,
+                        }
+                    }
+                }
+            }
+        }
+
+        const result = await prisma.events.findMany({
+            where: whereCondition,
+
+            include:{
+                organizer:true,
+                category:true,
+                schedule:{
+                    where:{
+                        is_active:true
+                    }
+                }
+            }
+        })
+
+        return {
+            status: 200,
+            message: "Successful",
+            data:result
+        }
     }catch(e){
         return {
             status: 500,
-            message: "Internal server error"
+            message:"Internal server error",
+            data:[]
         }
     }
 }
 
-export const deleteCategory = async(data:any, user:any)=>{
-     try{
-        if(user?.status=="PENDING"){
-            return {
-                status: 401,
-                message: "you are not ADMIN/ORGANIZER"
-            }
-        }
-        
-            const category= await prisma.categories.findUnique({
-                where:{
-                    id: data?.id
-                }
-            })
-            if(!category){
-                return {
-                    status: 404,
-                    message: "Category not found"
-                }
-            }
-            if(category.created_by!= user?.id){
-                console.log("Created by someone. but, another one trying to delete")
-                return {
-                    status: 401,
-                    message: "UnAuthorized person"
-                }
-            }
-            await prisma.categories.update({
-                where:{
-                    id: data?.id
-                },
-                data:{
-                    is_active: false
-                }
-            })
-            return {
-                status: 200,
-                message: "Category deleted Successfully"
-            }
-        
-    }catch(e){
-        return {
-            status: 500,
-            message: "Internal server error"
-        }
-    }
-}
 

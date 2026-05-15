@@ -1,52 +1,53 @@
 import {prisma} from "../prisma"
 import {Role} from "@prisma/client"
 
-export const unApprovedEventList = async(user:any)=>{
-    try{
-        if(user?.status == "PENDING" || user?.role != "ADMIN"){
+// export const EventList = async(user:any)=>{
+//     try{
+//         // if(user?.status == "PENDING" || user?.role != "ADMIN"){
             
-            return {
-                status: 401,
-                message: "UnAuthorized person",
-                data:[]
-            }
-        }
+//         //     return {
+//         //         status: 401,
+//         //         message: "UnAuthorized person",
+//         //         data:[]
+//         //     }
+//         // }
 
-        const events = await prisma.events.findMany({
-                where:{
-                    is_active: true,
-                    approval:{
-                        some:{
-                            approved_by:null
-                        }
-                    }
-                },
+//         const events = await prisma.events.findMany({
+//                 where:{
+//                     is_active: true,
+//                     approval:{
+//                         some:{
+//                             approved_by:null
+//                         }
+//                     }
+//                 },
 
-                include:{
-                    organizer:true,
-                    schedule:{
-                        where:{
-                            is_active:true
-                        }
-                    }
-                }
-        })
+//                 include:{
+//                     organizer:true,
+//                     schedule:{
+//                         where:{
+//                             is_active:true
+//                         }
+//                     }
+//                 }
+//         })
 
-        return {
-            status: 200,
-            message: "Successful",
-            data:events
-        }
-    }
-    catch(e){
-        console.log(e);
-        return{
-            status: 500,
-            message: "Internal server error",
-            data:[]
-        }
-    }
-}
+//         return {
+//             status: 200,
+//             message: "Successful",
+//             data:events
+//         }
+//     }
+//     catch(e){
+//         console.log(e);
+//         return{
+//             status: 500,
+//             message: "Internal server error",
+//             data:[]
+//         }
+//     }
+// }
+
 
 export const unApprovedAdminsList = async(user:any)=>{
     try{
@@ -158,7 +159,7 @@ export const eventApproval = async(data:any, user:any)=>{
         if(!waiting){
             return {
                 status: 404,
-                message: "event not in waiting for approval queue"
+                message: "event not available approval queue"
             }
         }
 
@@ -174,7 +175,11 @@ export const eventApproval = async(data:any, user:any)=>{
                 event_id: data?.id,
             },
             data:{
-                approved_by: user?.id,
+                approver:{
+                    connect:{
+                        id: user?.id
+                    }
+                }
             }
         })
 
@@ -185,6 +190,61 @@ export const eventApproval = async(data:any, user:any)=>{
 
 
     }catch(e){
+        return {
+            status: 500,
+            message: "Internal server error"
+        }
+    }
+}
+
+export const organizerAdminApproval = async(data:any, user:any)=>{
+    try{
+        if(user?.role!="ADMIN" || user?.status=="PENDING"){
+            return {
+                status: 401,
+                message: "UnAuthorized person"
+            }
+        }
+
+        const requester= await prisma.approvals.findUnique({
+            where:{
+                user_id: data?.id
+            }
+        })
+
+        if(!requester){
+            return {
+                status: 404,
+                message: "No user found"
+            }
+        }
+
+        if(requester?.approved_by!= null){
+            return {
+                status: 400,
+                message: "Already Approved"
+            }
+        }
+
+        await prisma.approvals.update({
+            where:{
+                user_id: data?.id
+            },
+            data:{
+                approver:{
+                    connect:{
+                        id:user?.id
+                    }
+                }
+            }
+        })
+
+        return {
+            status:200,
+            message: "Approved Successfully"
+        }
+    }catch(e){
+        console.log(e);
         return {
             status: 500,
             message: "Internal server error"

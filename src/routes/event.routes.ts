@@ -1,0 +1,17 @@
+import  express from "express";
+import authmiddleware from "../middleware/auth.middleware";
+import * as eventController from "../controllers/event.controllers"
+
+const router = express.Router()
+
+router.post("/createEvent", authmiddleware, eventController.createEvent)
+
+router.post("/addSchedule", authmiddleware, eventController.addSchedule)
+
+router.patch("/cancelSchedule", authmiddleware, eventController.cancelSchedule)
+
+router.patch("/cancelEvent", authmiddleware, eventController.cancelEvent)
+
+router.patch("/eventList", authmiddleware, eventController.eventList)
+
+export default router;
