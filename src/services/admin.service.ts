@@ -1,55 +1,7 @@
 import {prisma} from "../prisma"
 import {Role} from "@prisma/client"
 
-// export const EventList = async(user:any)=>{
-//     try{
-//         // if(user?.status == "PENDING" || user?.role != "ADMIN"){
-            
-//         //     return {
-//         //         status: 401,
-//         //         message: "UnAuthorized person",
-//         //         data:[]
-//         //     }
-//         // }
-
-//         const events = await prisma.events.findMany({
-//                 where:{
-//                     is_active: true,
-//                     approval:{
-//                         some:{
-//                             approved_by:null
-//                         }
-//                     }
-//                 },
-
-//                 include:{
-//                     organizer:true,
-//                     schedule:{
-//                         where:{
-//                             is_active:true
-//                         }
-//                     }
-//                 }
-//         })
-
-//         return {
-//             status: 200,
-//             message: "Successful",
-//             data:events
-//         }
-//     }
-//     catch(e){
-//         console.log(e);
-//         return{
-//             status: 500,
-//             message: "Internal server error",
-//             data:[]
-//         }
-//     }
-// }
-
-
-export const unApprovedAdminsList = async(user:any)=>{
+export const adminsList = async(data:any, user:any)=>{
     try{
         if(user?.status == "PENDING" || user?.role != "ADMIN"){
             
@@ -60,16 +12,35 @@ export const unApprovedAdminsList = async(user:any)=>{
             }
         }
 
-        const admins = await prisma.users.findMany({
-                where:{
-                    is_active: true,
-                    role: Role.ADMIN,
-                    requested_approvals:{
-                        some:{
-                            approved_by:null
-                        }
+        const filter = data?.filter;
+
+        let whereCondition:any={
+            role: Role.ADMIN,
+            is_active:true
+        };
+
+        if(filter == "approved"){
+            whereCondition.request_approvals={
+                some:{
+                    approved_by:{
+                        not:null
                     }
-                },
+                }
+            }
+        }
+
+        if(filter== "unapproved"){
+            whereCondition.request_approvals={
+                some:{
+                    approved_by:null
+                }
+            }
+        }
+
+
+
+        const admins = await prisma.users.findMany({
+                where: whereCondition,
         })
 
         return {
@@ -88,10 +59,10 @@ export const unApprovedAdminsList = async(user:any)=>{
     }
 }
 
-export const unApprovedOrganizerList = async(user:any)=>{
+export const organizersList = async(data:any, user:any)=>{
      try{
-        if(user?.status == "PENDING" || user?.role != "ADMIN"){
-            
+
+        if(user?.status == "PENDING" || user?.role != "ADMIN"){    
             return {
                 status: 401,
                 message: "UnAuthorized person",
@@ -99,16 +70,34 @@ export const unApprovedOrganizerList = async(user:any)=>{
             }
         }
 
-        const organizers = await prisma.users.findMany({
-                where:{
-                    is_active: true,
-                    role: Role.ORGANIZER,
-                    requested_approvals:{
-                        some:{
-                            approved_by:null
-                        }
+        let filter= data?.filter;
+
+        let whereCondition:any={
+            role: Role.ORGANIZER,
+            is_active:true,
+        }
+
+        if(filter=="approved"){
+            whereCondition.request_approvals={
+                some:{
+                    approved_by:{
+                        not:null
                     }
-                },
+                }
+            }
+        }
+
+        if(filter =="unapproved"){
+            whereCondition.requested_approvals={
+                some:{
+                    approved_by:null,
+                }
+            }
+        }
+
+
+        const organizers = await prisma.users.findMany({
+                where: whereCondition,
         })
 
         return {
@@ -126,6 +115,8 @@ export const unApprovedOrganizerList = async(user:any)=>{
         }
     }
 }
+//merge above two
+
 
 export const eventApproval = async(data:any, user:any)=>{
     try{
@@ -251,3 +242,4 @@ export const organizerAdminApproval = async(data:any, user:any)=>{
         }
     }
 }
+//merge above two

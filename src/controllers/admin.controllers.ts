@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import * as adminService from "../services/admin.service"
 
-export const unApprovedAdminsList = async(req:Request, res:Response)=>{
-    const result = await adminService.unApprovedAdminsList((req as any).user)
+export const adminsList = async(req:Request, res:Response)=>{
+    const result = await adminService.adminsList(req?.body,(req as any).user)
     return res.status(result.status).json(result)
 }
 
-export const unApprovedOrganizerList = async(req:Request, res:Response)=>{
-    const result = await adminService.unApprovedOrganizerList((req as any).user)
+export const organizersList = async(req:Request, res:Response)=>{
+    const result = await adminService.organizersList(req?.body,(req as any).user)
     return res.status(result.status).json(result)
 }
 

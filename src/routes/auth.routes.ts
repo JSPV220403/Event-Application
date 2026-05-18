@@ -7,6 +7,5 @@ const router= express.Router()
 
 router.post("/register", controller.register)
 router.get("/login", controller.login);
-// router.get("/decode", authmiddleware,controller.decode);
 
 export default router

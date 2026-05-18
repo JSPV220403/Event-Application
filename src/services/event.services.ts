@@ -79,162 +79,335 @@ export const createEvent = async(data:any, user:any)=>{
     }  
 }
 
-export const addSchedule = async(data:any, user:any)=>{
-    try{  
+export const updateEvent = async(data:any, user:any)=>{
+    try{
+
         if(user?.status=="PENDING"){
             return {
                 status: 401,
                 message: "you are not ADMIN/ORGANIZER"
             }
         }
-        
-        const event= await prisma.events.findFirst({
+
+        const event = await prisma.events.findUnique({
             where:{
                 id: data?.id,
+            },
+            include:{
+                schedule:true
             }
         })
 
         if(!event){
             return {
                 status: 404,
-                message: "Event not fount"
-            }
-        }
-        if(user?.role== "ORGANIZER"){
-            if(event?.organizer_id != user?.id){
-                return {
-                    status: 401,
-                    message: "UnAuthorized person"
-                }
+                message: "Event not found"
             }
         }
 
-        for(const items of data.schedules){
-            const schedule= await prisma.event_Schedules.create({
-                data:{
-                    date: new Date(items?.date),
-                    time: items?.time,
-                    price: items?.price,
-                    venue_capacity: items?.venue_capacity,
-                    event:{
-                        connect:{
-                            id: event?.id
-                        }
-                    }
-                }
-            })
-
-            const address= await prisma.addresses.create({
-                data:{
-                    address: items?.address,
-                    pincode: items?.pincode,
-
-                    schedules:{
-                        connect:{
-                            id: schedule?.id
-                        }
-                    }
-                }
-            })
-        }
-
-        return {
-            status : 200,
-            message: "Schedule added"
-        }
-    }
-    catch(e){
-        console.log(e);
-        return {
-            status: 500,
-            message: "Internal server error"
-        }
-    }
-}
-
-export const cancelSchedule = async(data:any, user:any)=>{
-    try{
-         if(user?.status=="PENDING"){
+        if(user?.role == "ORGANIZER" && event?.organizer_id != user?.id){
             return {
                 status: 401,
-                message: "you are not ADMIN/ORGANIZER"
+                message: "UnAuthorized person"
             }
         }
-        const schedule = await prisma.event_Schedules.findUnique({
+
+        const update= await prisma.events.update({
             where:{
                 id: data?.id
             },
-
-            include:{
-                event:true
+            data:{
+                name: data.name,
+                description: data?.description,
+                category:{
+                    connect:{
+                        id:data?.category_id
+                    }
+                },
+                // organizer:{
+                //     connect:{
+                //         id:user?.id
+                //     }
+                // }
             }
         })
 
-        if(!schedule){
-            return {
-                status: 404,
-                message: "Schedule not found"
-            }
+        if(user?.role == "ORGANIZER"){
+            const approval = await prisma.approvals.updateMany({
+                where:{
+                    event_id: data?.id
+                },
+                data:{
+                    approved_by: null
+                }
+            })
         }
 
-        if(user?.role === "ORGANIZER"){
-            if(schedule?.event?.organizer_id!=user?.id){
-                return {
-                    status: 401,
-                    message: "UnAuthorized User"
-                }
+        let existingSchedules: string[]=[];
+
+        for(const items of data.schedules){
+
+            if(items?.id){
+
+                existingSchedules.push(items?.id)
+
+                const schedule= await prisma.event_Schedules.update({
+                    where:{
+                        id: items?.id
+                    },
+                    data:{
+                        date: new Date(items?.date),
+                        time: items?.time,
+                        price: items?.price,
+                        venue_capacity: items?.venue_capacity,
+                        event:{
+                            connect:{
+                                id: event?.id
+                            }
+                        }
+                    }
+                })
+
+                const address= await prisma.addresses.update({
+                    where:{
+                        id: items?.address_id
+                    },
+                    data:{
+                        address: items?.address,
+                        pincode: items?.pincode,
+
+                        schedules:{
+                            connect:{
+                                id: schedule?.id
+                            }
+                        }
+                    }
+                })
+
             }
+
             else{
-                await prisma.event_Schedules.update(
-                    {
-                        where:{
-                            id: data?.id
-                        },
-                        data:{
-                            is_active:false
+                const schedule= await prisma.event_Schedules.create({
+                    data:{
+                        date: new Date(items?.date),
+                        time: items?.time,
+                        price: items?.price,
+                        venue_capacity: items?.venue_capacity,
+                        event:{
+                            connect:{
+                                id: event?.id
+                            }
                         }
-                    },
-                )
+                    }
+                })
 
-                return{
-                    status : 200,
-                    message: "Schedule cancelled"
-                }
+                const address= await prisma.addresses.create({
+                    data:{
+                        address: items?.address,
+                        pincode: items?.pincode,
+
+                        schedules:{
+                            connect:{
+                                id: schedule?.id
+                            }
+                        }
+                    }
+                })
             }
         }
 
-        else if(user?.role==="ADMIN"){
-            await prisma.event_Schedules.update(
-                    {
-                        where:{
-                            id: data?.id
-                        },
-                        data:{
-                            is_active:false
-                        }
+        for(const oldEvents of event.schedule){
+            if(!existingSchedules.includes(oldEvents.id)){
+                await prisma.event_Schedules.updateMany({
+                    where:{
+                        id: oldEvents.id
                     },
-                )
+                    data:{
+                        is_active: false
+                    }
+                })
 
-                return{
-                    status : 200,
-                    message: "Schedule cancelled"
-                }
-        }
-
-        else{
-            return {
-                    status: 401,
-                    message: "UnAuthorized User"
+                await prisma.addresses.updateMany({
+                    where:{
+                        schedule_id: oldEvents?.id,
+                    },
+                    data:{
+                        is_active:false
+                    }
+                })
             }
         }
-    }
-    catch(e){
+
         return {
-            status: 500,
-            message: "Internal server error"
+            status: 200,
+            message: "Successfully created and waiting for admin approval"
         }
-    }
+    }catch(e){
+        console.log(e);
+
+        return {
+        status: 500,
+        message: "Internal server error"
+        }
+    }  
 }
+
+// export const addSchedule = async(data:any, user:any)=>{
+//     try{  
+//         if(user?.status=="PENDING"){
+//             return {
+//                 status: 401,
+//                 message: "you are not ADMIN/ORGANIZER"
+//             }
+//         }
+        
+//         const event= await prisma.events.findFirst({
+//             where:{
+//                 id: data?.id,
+//             }
+//         })
+
+//         if(!event){
+//             return {
+//                 status: 404,
+//                 message: "Event not fount"
+//             }
+//         }
+//         if(user?.role== "ORGANIZER"){
+//             if(event?.organizer_id != user?.id){
+//                 return {
+//                     status: 401,
+//                     message: "UnAuthorized person"
+//                 }
+//             }
+//         }
+
+//         for(const items of data.schedules){
+//             const schedule= await prisma.event_Schedules.create({
+//                 data:{
+//                     date: new Date(items?.date),
+//                     time: items?.time,
+//                     price: items?.price,
+//                     venue_capacity: items?.venue_capacity,
+//                     event:{
+//                         connect:{
+//                             id: event?.id
+//                         }
+//                     }
+//                 }
+//             })
+
+//             const address= await prisma.addresses.create({
+//                 data:{
+//                     address: items?.address,
+//                     pincode: items?.pincode,
+
+//                     schedules:{
+//                         connect:{
+//                             id: schedule?.id
+//                         }
+//                     }
+//                 }
+//             })
+//         }
+
+//         return {
+//             status : 200,
+//             message: "Schedule added"
+//         }
+//     }
+//     catch(e){
+//         console.log(e);
+//         return {
+//             status: 500,
+//             message: "Internal server error"
+//         }
+//     }
+// }
+
+// export const cancelSchedule = async(data:any, user:any)=>{
+//     try{
+//          if(user?.status=="PENDING"){
+//             return {
+//                 status: 401,
+//                 message: "you are not ADMIN/ORGANIZER"
+//             }
+//         }
+//         const schedule = await prisma.event_Schedules.findUnique({
+//             where:{
+//                 id: data?.id
+//             },
+
+//             include:{
+//                 event:true
+//             }
+//         })
+
+//         if(!schedule){
+//             return {
+//                 status: 404,
+//                 message: "Schedule not found"
+//             }
+//         }
+
+//         if(user?.role === "ORGANIZER"){
+//             if(schedule?.event?.organizer_id!=user?.id){
+//                 return {
+//                     status: 401,
+//                     message: "UnAuthorized User"
+//                 }
+//             }
+//             else{
+//                 await prisma.event_Schedules.update(
+//                     {
+//                         where:{
+//                             id: data?.id
+//                         },
+//                         data:{
+//                             is_active:false
+//                         }
+//                     },
+//                 )
+
+//                 return{
+//                     status : 200,
+//                     message: "Schedule cancelled"
+//                 }
+//             }
+//         }
+
+//         else if(user?.role==="ADMIN"){
+//             await prisma.event_Schedules.update(
+//                     {
+//                         where:{
+//                             id: data?.id
+//                         },
+//                         data:{
+//                             is_active:false
+//                         }
+//                     },
+//                 )
+
+//                 return{
+//                     status : 200,
+//                     message: "Schedule cancelled"
+//                 }
+//         }
+
+//         else{
+//             return {
+//                     status: 401,
+//                     message: "UnAuthorized User"
+//             }
+//         }
+//     }
+//     catch(e){
+//         return {
+//             status: 500,
+//             message: "Internal server error"
+//         }
+//     }
+// }
 
 export const cancelEvent = async(data:any, user:any)=>{
     try{
@@ -465,5 +638,3 @@ export const eventList = async(data:any,user:any)=>{
         }
     }
 }
-
-
