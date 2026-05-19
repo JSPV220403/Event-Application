@@ -90,6 +90,25 @@ import {prisma} from "../prisma"
 
 export const bookTicket = async(data:any, user: any)=>{
     try{
+        const isExist= await prisma.event_Schedules.findUnique({
+            where:{
+                id: data?.id,
+            }
+        })
+        if(!isExist){
+            return {
+                status:404,
+                message: "Event not found",
+                data:{}
+            }
+        }
+        if(data?.seats<=0){
+            return{
+                status: 400,
+                message: "Seat count invalid",
+                data:{}
+            }
+        }
     const total_tickets= await prisma.event_Schedules.findFirst({
         where:{
             id: data?.id
@@ -98,6 +117,7 @@ export const bookTicket = async(data:any, user: any)=>{
             venue_capacity:true
         }
     })
+    //console.log("total tickets: ",total_tickets);
     const tickets_sold= await prisma.sold_Tickets.aggregate({
         where:{
             schedule_id: data?.id,
@@ -108,8 +128,12 @@ export const bookTicket = async(data:any, user: any)=>{
         }
     })
     let sold_seats= tickets_sold._sum.seat_count??0;
+    
+    //console.log("Sold seats: ",sold_seats);
 
-    if(total_tickets?.venue_capacity! >= sold_seats + data?.seats){
+    //console.log("Result: ",(Number(total_tickets?.venue_capacity!) >= (sold_seats + Number(data?.seats))));
+
+    if(Number(total_tickets?.venue_capacity!) >= (sold_seats + Number(data?.seats))){
         const res= await prisma.sold_Tickets.create(
             {
                 data:{

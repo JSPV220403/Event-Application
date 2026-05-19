@@ -168,19 +168,13 @@ export const updateEvent = async(data:any, user:any)=>{
                     }
                 })
 
-                const address= await prisma.addresses.update({
+                const address= await prisma.addresses.updateMany({
                     where:{
-                        id: items?.address_id
+                        schedule_id: items?.id
                     },
                     data:{
                         address: items?.address,
-                        pincode: items?.pincode,
-
-                        schedules:{
-                            connect:{
-                                id: schedule?.id
-                            }
-                        }
+                        pincode: items?.pincode,                        
                     }
                 })
 

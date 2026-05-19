@@ -13,7 +13,7 @@ export const listCategory = async(req:Request, res:Response)=>{
 }
 
 export const updateCategory = async(req:Request, res:Response)=>{
-    const result = await categoryService.updateCatefory(req?.body, (req as any).user);
+    const result = await categoryService.updateCategory(req?.body, (req as any).user);
     return res.status(result.status).json(result)
 }
 

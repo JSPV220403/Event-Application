@@ -152,7 +152,7 @@ model Users{
   image_url String?
   name String @db.VarChar(50)
   gender Gender
-  phone_number String @db.VarChar(16)
+  phone_number String @unique @db.VarChar(16)
   email String @unique @db.VarChar(255)
   password String
   role Role

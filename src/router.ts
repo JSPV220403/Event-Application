@@ -8,7 +8,7 @@ import categoryRoutes from "./routes/category.routes"
 const router = express.Router()
 
 router.use("/auth", authRoutes)
-router.use("/authz", eventRoutes)
+router.use("/event", eventRoutes)
 router.use("/user", userRoutes)
 router.use("/admin", adminRoutes)
 router.use("/category", categoryRoutes)

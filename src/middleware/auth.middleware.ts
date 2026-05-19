@@ -6,17 +6,19 @@ const authmiddleware= async(req:Request, res:Response,next:NextFunction)=>{
     try{
         const authHeader = req.headers.authorization
 
+        //console.log(authHeader);
+
         if(!authHeader){
             return res.status(401).json({
                 success: false,
                 message: "Token missing"
             })
         }
-
-        const token = authHeader.split(" ")[1]
-
+        //console.log("crossed");
+        const token = await authHeader.split(" ")[1]
+        //console.log("Token: ",token);
         const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-
+        //console.log("decoded: ",decoded);
         (req as any).user=decoded
 
         next()

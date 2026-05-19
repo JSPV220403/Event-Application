@@ -10,16 +10,26 @@ import { connect } from "node:http2"
 
 export const register = async(data:any)=>{
     try{
-        const existingUser = await prisma.users.findUnique(
+        const existingUser = await prisma.users.findFirst(
             {
-                where:{email:data.email}
+                where:{
+                    OR:[
+                        {
+                            email: data?.email
+                        },
+                        {
+                            phone_number: data?.phone_number
+                        }
+                    ]
+                   
+                }
             }
         )
 
         if(existingUser){
             return{
                 success: false,
-                message: "Email already exist",
+                message: "Email/Phone number already exist",
                 status: 400
             }
         }
@@ -120,7 +130,7 @@ export const login= async(data:any)=>{
             success: true,
             status: 200,
             message: "login successful",
-            token
+            token: "Bearer "+token,
         }
     }
     catch(e){
@@ -132,4 +142,30 @@ export const login= async(data:any)=>{
         }
     }
 }
+
+// export const updateAccountDetails= async(data:any, user:any)=>{
+//     try{
+//         const isExist = await prisma.users.findUnique({
+//             where:{
+//                 id: data?.id,
+//             }
+//         })
+
+//         if(!isExist){
+//             return {
+//                 status: 404,
+//                 message: "User not found"
+//             }
+//         }
+
+
+//     }catch(e){
+//         console.log(e);
+//         return {
+//             status: 502,
+//             message: "Internal server error",
+//             data:{}
+//         }
+//     }
+// }
 

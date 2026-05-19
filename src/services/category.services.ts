@@ -9,14 +9,17 @@ export const createCategory = async(data:any, user:any)=>{
             }
         }
 
+        
         const isExist= await prisma.categories.findFirst({
             where:{
                 name: String( data?.name).toLowerCase(),
                 is_active:true
             }
         })
+
+        console.log("Category: ",isExist)
         
-        if(!isExist){
+        if(isExist){
             return {
                 status: 400,
                 message: "Category name Already exist"
@@ -69,7 +72,7 @@ export const listCategory = async()=>{
     }
 }
 
-export const updateCatefory = async(data:any, user:any)=>{
+export const updateCategory = async(data:any, user:any)=>{
     try{
         const category = await prisma.categories.findUnique({
             where:{
@@ -99,7 +102,7 @@ export const updateCatefory = async(data:any, user:any)=>{
             }
         })
         
-        if(!isExist){
+        if(isExist){
             return {
                 status: 400,
                 message: "Category name Already exist"

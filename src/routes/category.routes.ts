@@ -9,7 +9,7 @@ import * as categoryController from "../controllers/category.controllers"
 
 router.post("/createCategory", authmiddleware, categoryController.createCategory)
 
-router.post("/listCateogry", authmiddleware, categoryController.listCategory)
+router.get("/listCateogry", authmiddleware, categoryController.listCategory)
 
 router.post("/updateCategory", authmiddleware, categoryController.updateCategory)
 

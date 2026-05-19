@@ -14,6 +14,6 @@ router.post("/updateEvent", authmiddleware, eventController.updateEvent)
 
 router.post("/cancelEvent", authmiddleware, eventController.cancelEvent)
 
-router.patch("/eventList", authmiddleware, eventController.eventList)
+router.get("/eventList", authmiddleware, eventController.eventList)
 
 export default router;

@@ -22,7 +22,7 @@ export const organizersAdminsList = async(data:any, user:any)=>{
         whereCondition.role= role == "organizer"? Role.ORGANIZER :  Role.ADMIN;
 
         if(filter == "approved"){
-            whereCondition.request_approvals={
+            whereCondition.requested_approvals={
                 some:{
                     approved_by:{
                         not:null
@@ -32,7 +32,7 @@ export const organizersAdminsList = async(data:any, user:any)=>{
         }
 
         if(filter== "unapproved"){
-            whereCondition.request_approvals={
+            whereCondition.requested_approvals={
                 some:{
                     approved_by:null
                 }

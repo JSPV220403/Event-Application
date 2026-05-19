@@ -7,5 +7,7 @@ const router= express.Router()
 
 router.post("/register", controller.register)
 router.get("/login", controller.login);
+//router.put("/updateAccountDetails", authmiddleware, controller.updateAccountDetails);
+
 
 export default router
