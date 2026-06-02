@@ -1,93 +1,5 @@
 import {prisma} from "../prisma"
 
-// export const eventList = async(data:any)=>{
-//     try{
-
-//         let page = data?.page??1;
-
-//         let limit = data?.limit??10;
-
-//         const res= await prisma.events.findMany({
-//             where:{
-//                 is_active: true,
-
-//                 approval:{
-//                     some:{
-//                         approved_by:{
-//                             not:null
-//                         }
-//                     }
-//                 },
-
-                
-
-//                 category_id: data.category_id||undefined,
-
-//                 organizer_id: data.organizer_id||undefined,
-
-//                 OR:[
-
-//                     {
-//                         name:{
-//                             contains:data.search||"",
-//                             mode: "insensitive"
-//                         }
-//                     },
-//                     {
-//                         description:{
-//                             contains:data.search||"",
-//                             mode: "insensitive"
-//                         }
-//                     },
-//                     {
-//                         category:{
-//                             name:{
-//                                 contains: data.search||"",
-//                                 mode:"insensitive"
-//                             }
-//                         }
-//                     },
-//                     {
-//                         organizer:{
-//                             name:{
-//                                 contains: data.search||"",
-//                                 mode:"insensitive"
-//                             }
-//                         }
-//                     }
-//                 ]
-                
-//             },
-
-//             skip: (page-1)*limit,
-//             take: limit,
-//             include:{
-//                 schedule: {
-//                     where:{
-//                         is_active:true
-//                     }
-//                 },
-//                 //approval: true
-//             }
-//         })
-
-//         return {
-//             staus: 200,
-//             message: "Successfull",
-//             data: res
-//         }
-
-//     }
-//     catch(e){
-//         console.log(e)
-//         return{
-//             status: 500,
-//             message: "Internal server error",
-//             data:{}
-//         }
-//     }
-// }
-
 export const bookTicket = async(data:any, user: any)=>{
     try{
         const isExist= await prisma.event_Schedules.findUnique({
@@ -117,7 +29,7 @@ export const bookTicket = async(data:any, user: any)=>{
             venue_capacity:true
         }
     })
-    //console.log("total tickets: ",total_tickets);
+
     const tickets_sold= await prisma.sold_Tickets.aggregate({
         where:{
             schedule_id: data?.id,
@@ -128,10 +40,6 @@ export const bookTicket = async(data:any, user: any)=>{
         }
     })
     let sold_seats= tickets_sold._sum.seat_count??0;
-    
-    //console.log("Sold seats: ",sold_seats);
-
-    //console.log("Result: ",(Number(total_tickets?.venue_capacity!) >= (sold_seats + Number(data?.seats))));
 
     if(Number(total_tickets?.venue_capacity!) >= (sold_seats + Number(data?.seats))){
         const res= await prisma.sold_Tickets.create(
@@ -170,7 +78,7 @@ export const bookTicket = async(data:any, user: any)=>{
 
 export const cancelTicket = async(data:any, user: any)=>{
     try{
-        const user= await prisma.sold_Tickets.update({
+        const ticket= await prisma.sold_Tickets.update({
             where:{
                 id: data?.id
             },
@@ -178,11 +86,18 @@ export const cancelTicket = async(data:any, user: any)=>{
                 is_active:false
             }
         })
-        if(user){
+        if(ticket?.user_id!= user?.id){
+            return{
+                status: 401,
+                message: "UnAuthorized person",
+                data:{}
+            }
+        }
+        if(ticket){
             return{
                 status:200,
                 message: "Canceled Successfully",
-                data: user
+                data: ticket
             }
         }
         
@@ -226,10 +141,20 @@ export const bookHistory = async(user: any)=>{
             }
         }
 
+        const todayDate = new Date();
+        const historyWithCancelable = await history.map(ticket=>{
+            const scheduleDate =new Date(`${ticket.schedule.date.toISOString().split("T")[0]}T${ticket.schedule.time}`)
+
+            return {
+                ...ticket,
+                isCancelable: scheduleDate>=todayDate
+            }
+        })
+
         return{
             status:200,
             message:"Successfull",
-            data:history
+            data:historyWithCancelable
         }
 
         

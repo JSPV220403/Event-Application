@@ -1,3 +1,4 @@
+import { resourceUsage } from "node:process"
 import {prisma} from "../prisma"
 
 export const createCategory = async(data:any, user:any)=>{
@@ -57,7 +58,7 @@ export const listCategory = async()=>{
                 is_active:true
             }
         })
-
+        
         return {
             status: 200,
             message: "Successfully",
@@ -174,6 +175,45 @@ export const deleteCategory = async(data:any, user:any)=>{
         return {
             status: 500,
             message: "Internal server error"
+        }
+    }
+}
+
+export const getCategoryById = async(data:any, user:any)=>{
+    try{
+        if((user.role == "ADMIN"||user.role=="ORGANIZER") && user.status=="PENDING"){
+            return {
+                status: 401,
+                message: "UnAuthorized person",
+                data:{}
+            }
+        }
+        const result = await prisma.categories.findUnique({
+            where:{
+                id: data?.id,
+                is_active:true
+            }
+        })
+
+        if(!result){
+            return {
+                status: 404,
+                message: "Category not found",
+                data:{}
+            }
+        }
+
+        return{
+            status: 200,
+            message: "Successfull",
+            data: result
+        }
+    }catch(e){
+        console.log(e);
+        return {
+            status: 500,
+            message: "Internal server error",
+            data:{}
         }
     }
 }

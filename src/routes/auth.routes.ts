@@ -6,8 +6,6 @@ import authmiddleware from "../middleware/auth.middleware"
 const router= express.Router()
 
 router.post("/register", controller.register)
-router.get("/login", controller.login);
-//router.put("/updateAccountDetails", authmiddleware, controller.updateAccountDetails);
-
+router.post("/login", controller.login);
 
 export default router

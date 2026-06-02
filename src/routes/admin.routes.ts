@@ -5,8 +5,7 @@ import authmiddleware from "../middleware/auth.middleware";
 
 const router = express.Router()
 
-router.get("/organizersAdminsList", authmiddleware, adminController.organizersAdminsList)
-//router.get("/organizerList", authmiddleware, adminController.organizersList)
+router.post("/organizersAdminsList", authmiddleware, adminController.organizersAdminsList)
 router.patch("/approval", authmiddleware, adminController.approval);
 router.patch("/organizerAdminApproval",authmiddleware, adminController.organizerAdminApproval)
 

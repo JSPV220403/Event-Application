@@ -12,6 +12,11 @@ export const listCategory = async(req:Request, res:Response)=>{
        return res.status(result.status).json(result)
 }
 
+export const getCategoryById = async(req:Request, res:Response)=>{
+    const result = await categoryService.getCategoryById(req?.body, (req as any)?.user);
+    return res.status(result?.status).json(result)
+}
+
 export const updateCategory = async(req:Request, res:Response)=>{
     const result = await categoryService.updateCategory(req?.body, (req as any).user);
     return res.status(result.status).json(result)

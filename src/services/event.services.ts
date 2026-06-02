@@ -3,6 +3,7 @@ import {prisma} from "../prisma"
 
 export const createEvent = async(data:any, user:any)=>{
     try{
+        console.log("Payload: ",data)
         if(user?.status=="PENDING"){
             return {
                 status: 401,
@@ -79,6 +80,44 @@ export const createEvent = async(data:any, user:any)=>{
     }  
 }
 
+export const eventById = async(data:any)=>{
+    try{
+        const event = await prisma.events.findFirst({
+            where:{
+                id: data?.id
+            },
+            include:{
+                category:true,
+                schedule: true,
+                organizer:true
+            }
+        })
+
+        if(!event){
+            return {
+                status: 404,
+                message: "Event Not Found",
+                data:{}
+            }
+        }
+
+        return {
+            status: 200,
+            message: "Successfull",
+            data:event
+        }
+
+
+    }catch(e){
+        console.log(e);
+        return{
+            status: 502,
+            message: "Internal error",
+            data:{}
+        }
+    }
+}
+
 export const updateEvent = async(data:any, user:any)=>{
     try{
 
@@ -111,7 +150,7 @@ export const updateEvent = async(data:any, user:any)=>{
                 message: "UnAuthorized person"
             }
         }
-
+        
         const update= await prisma.events.update({
             where:{
                 id: data?.id
@@ -124,11 +163,6 @@ export const updateEvent = async(data:any, user:any)=>{
                         id:data?.category_id
                     }
                 },
-                // organizer:{
-                //     connect:{
-                //         id:user?.id
-                //     }
-                // }
             }
         })
 
@@ -246,163 +280,6 @@ export const updateEvent = async(data:any, user:any)=>{
     }  
 }
 
-// export const addSchedule = async(data:any, user:any)=>{
-//     try{  
-//         if(user?.status=="PENDING"){
-//             return {
-//                 status: 401,
-//                 message: "you are not ADMIN/ORGANIZER"
-//             }
-//         }
-        
-//         const event= await prisma.events.findFirst({
-//             where:{
-//                 id: data?.id,
-//             }
-//         })
-
-//         if(!event){
-//             return {
-//                 status: 404,
-//                 message: "Event not fount"
-//             }
-//         }
-//         if(user?.role== "ORGANIZER"){
-//             if(event?.organizer_id != user?.id){
-//                 return {
-//                     status: 401,
-//                     message: "UnAuthorized person"
-//                 }
-//             }
-//         }
-
-//         for(const items of data.schedules){
-//             const schedule= await prisma.event_Schedules.create({
-//                 data:{
-//                     date: new Date(items?.date),
-//                     time: items?.time,
-//                     price: items?.price,
-//                     venue_capacity: items?.venue_capacity,
-//                     event:{
-//                         connect:{
-//                             id: event?.id
-//                         }
-//                     }
-//                 }
-//             })
-
-//             const address= await prisma.addresses.create({
-//                 data:{
-//                     address: items?.address,
-//                     pincode: items?.pincode,
-
-//                     schedules:{
-//                         connect:{
-//                             id: schedule?.id
-//                         }
-//                     }
-//                 }
-//             })
-//         }
-
-//         return {
-//             status : 200,
-//             message: "Schedule added"
-//         }
-//     }
-//     catch(e){
-//         console.log(e);
-//         return {
-//             status: 500,
-//             message: "Internal server error"
-//         }
-//     }
-// }
-
-// export const cancelSchedule = async(data:any, user:any)=>{
-//     try{
-//          if(user?.status=="PENDING"){
-//             return {
-//                 status: 401,
-//                 message: "you are not ADMIN/ORGANIZER"
-//             }
-//         }
-//         const schedule = await prisma.event_Schedules.findUnique({
-//             where:{
-//                 id: data?.id
-//             },
-
-//             include:{
-//                 event:true
-//             }
-//         })
-
-//         if(!schedule){
-//             return {
-//                 status: 404,
-//                 message: "Schedule not found"
-//             }
-//         }
-
-//         if(user?.role === "ORGANIZER"){
-//             if(schedule?.event?.organizer_id!=user?.id){
-//                 return {
-//                     status: 401,
-//                     message: "UnAuthorized User"
-//                 }
-//             }
-//             else{
-//                 await prisma.event_Schedules.update(
-//                     {
-//                         where:{
-//                             id: data?.id
-//                         },
-//                         data:{
-//                             is_active:false
-//                         }
-//                     },
-//                 )
-
-//                 return{
-//                     status : 200,
-//                     message: "Schedule cancelled"
-//                 }
-//             }
-//         }
-
-//         else if(user?.role==="ADMIN"){
-//             await prisma.event_Schedules.update(
-//                     {
-//                         where:{
-//                             id: data?.id
-//                         },
-//                         data:{
-//                             is_active:false
-//                         }
-//                     },
-//                 )
-
-//                 return{
-//                     status : 200,
-//                     message: "Schedule cancelled"
-//                 }
-//         }
-
-//         else{
-//             return {
-//                     status: 401,
-//                     message: "UnAuthorized User"
-//             }
-//         }
-//     }
-//     catch(e){
-//         return {
-//             status: 500,
-//             message: "Internal server error"
-//         }
-//     }
-// }
-
 export const cancelEvent = async(data:any, user:any)=>{
     try{
         if(user?.status=="PENDING"){
@@ -443,7 +320,7 @@ export const cancelEvent = async(data:any, user:any)=>{
             }
         }
         if(user?.role=="ADMIN"){
-            if(user?.id=== event?.organizer_id){
+            
                 await prisma.events.update({
                     where:{
                         id: data?.id
@@ -456,7 +333,7 @@ export const cancelEvent = async(data:any, user:any)=>{
                     status: 200,
                     message: "Event cancelled Successfully"
                 }
-            }
+            
         }
         return {
             status: 401,
@@ -605,7 +482,7 @@ export const eventList = async(data:any,user:any)=>{
             }
         }
 
-        const result = await prisma.events.findMany({
+        let result = await prisma.events.findMany({
             where: whereCondition,
 
             include:{
@@ -614,10 +491,30 @@ export const eventList = async(data:any,user:any)=>{
                 schedule:{
                     where:{
                         is_active:true
+                    },
+                    include:{
+                        address:true
                     }
-                }
+                },
+                
             }
         })
+
+        const now = new Date();
+
+        result = result
+        .map(event => ({
+            ...event,
+            schedule: event.schedule.filter(schedule => {
+
+            const eventDateTime = new Date(
+                `${schedule.date.toISOString().split("T")[0]}T${schedule.time}`
+            );
+
+            return eventDateTime > now;
+            })
+        }))
+        .filter(event => event.schedule.length > 0);
 
         return {
             status: 200,

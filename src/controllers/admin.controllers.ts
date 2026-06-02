@@ -6,11 +6,6 @@ export const organizersAdminsList = async(req:Request, res:Response)=>{
     return res.status(result.status).json(result)
 }
 
-// export const organizersList = async(req:Request, res:Response)=>{
-//     const result = await adminService.organizersList(req?.body,(req as any).user)
-//     return res.status(result.status).json(result)
-// }
-
 export const approval = async(req:Request, res:Response)=>{
     const result = await adminService.approval(req?.body,(req as any).user)
     return res.status(result.status).json(result)

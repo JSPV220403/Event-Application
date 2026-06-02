@@ -100,7 +100,9 @@ export const register = async(data:any)=>{
 
 export const login= async(data:any)=>{
     try{
-        const user = await prisma.users.findUnique({where:{email: data.email}})
+
+        console.log("Request body: ", data);
+        const user = await prisma.users.findUnique({where:{email: data?.email}})
 
         if(!user){
             return {
@@ -112,7 +114,7 @@ export const login= async(data:any)=>{
         }
 
         const isPasswordCorrect = await bcrypt.compare(
-            data.password, user.password!
+            data?.password, user.password!
         )
 
         if(!isPasswordCorrect){
@@ -130,7 +132,7 @@ export const login= async(data:any)=>{
             success: true,
             status: 200,
             message: "login successful",
-            token: "Bearer "+token,
+            token: token,
         }
     }
     catch(e){
@@ -142,30 +144,3 @@ export const login= async(data:any)=>{
         }
     }
 }
-
-// export const updateAccountDetails= async(data:any, user:any)=>{
-//     try{
-//         const isExist = await prisma.users.findUnique({
-//             where:{
-//                 id: data?.id,
-//             }
-//         })
-
-//         if(!isExist){
-//             return {
-//                 status: 404,
-//                 message: "User not found"
-//             }
-//         }
-
-
-//     }catch(e){
-//         console.log(e);
-//         return {
-//             status: 502,
-//             message: "Internal server error",
-//             data:{}
-//         }
-//     }
-// }
-
