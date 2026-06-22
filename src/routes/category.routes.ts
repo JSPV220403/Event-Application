@@ -11,7 +11,7 @@ router.post("/createCategory", authmiddleware, categoryController.createCategory
 
 router.get("/listCateogry", authmiddleware, categoryController.listCategory)
 
-router.post("/getCategoryById", authmiddleware, categoryController.getCategoryById)
+router.get("/getCategoryById", authmiddleware, categoryController.getCategoryById)
 
 router.post("/updateCategory", authmiddleware, categoryController.updateCategory)
 

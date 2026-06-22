@@ -6,12 +6,12 @@ const router = express.Router()
 
 router.post("/createEvent", authmiddleware, eventController.createEvent)
 
-router.post("/eventById",authmiddleware,eventController.eventById)
+router.get("/eventById",authmiddleware,eventController.eventById)
 
 router.post("/updateEvent", authmiddleware, eventController.updateEvent)
 
 router.post("/cancelEvent", authmiddleware, eventController.cancelEvent)
 
-router.post("/eventList", authmiddleware, eventController.eventList)
+router.get("/eventList", authmiddleware, eventController.eventList)
 
 export default router;

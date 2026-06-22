@@ -1,3 +1,4 @@
+import { json } from "node:stream/consumers";
 import {prisma} from "../prisma"
 import {Role} from "@prisma/client"
 
@@ -11,43 +12,45 @@ export const organizersAdminsList = async(data:any, user:any)=>{
                 data:[]
             }
         }
-
-        const filter = data?.filter;
-        const role = data?.role;
-
+        
         let whereCondition:any={
             is_active:true
         };
 
-        whereCondition.role= role== "organizer"? Role.ORGANIZER :  Role.ADMIN;
-
-        if(filter == "approved"){
-            whereCondition.requested_approvals={
-                some:{
-                    approved_by:{
-                        not:null
-                    }
-                }
-            }
-        }
-
-        if(filter== "unapproved"){
-            whereCondition.requested_approvals={
-                some:{
-                    approved_by:null
-                }
-            }
-        }
-
         const result = await prisma.users.findMany({
-                where: whereCondition,
+                where: {
+                    is_active:true,
+                },
+                include:{
+                    requested_approvals:true
+                }
         })
+
+        const filterResult = result
+                                    .filter(
+                                        user =>
+                                        user.role === Role.ADMIN ||
+                                        user.role === Role.ORGANIZER
+                                    )
+                                    .map(user => ({
+                                        id: user.id,
+                                        name: user.name,
+                                        mail: user.email,
+                                        role: user.role,
+                                        mobileNumber: user.phone_number,
+                                        is_approved:
+                                        user?.requested_approvals[0]?.approved_by == null
+                                            ? "unapproved"
+                                            : "approved",
+                                    }));
+        console.log(filterResult)
 
         return {
             status: 200,
             message: "Successful",
-            data:result
+            data:filterResult
         }
+        
     }
     catch(e){
         console.log(e);
@@ -61,6 +64,7 @@ export const organizersAdminsList = async(data:any, user:any)=>{
 
 export const approval = async(data:any, user:any)=>{
     try{
+
         if(user?.status=="PENDING" || user?.role != "ADMIN"){
             return {
                 status: 401,

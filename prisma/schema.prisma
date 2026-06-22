@@ -9,7 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  //url = env("DATABASE_URL")
 }
 
 model Addresses{
@@ -130,9 +130,11 @@ model Sold_Tickets{
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   is_active Boolean @default(true)
+  is_remainded Boolean @default(false)
 
   schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
   user Users @relation(fields: [user_id], references: [id])
+
 }
 
 model States{
@@ -167,4 +169,19 @@ model Users{
   category Categories[]
   soldTicket Sold_Tickets[]
   event Events[]
+}
+
+model Payments{
+  id String @id @default(uuid())
+  schedule_id String?
+  ticket_id String?  @unique
+  order_id String?
+  payment_id String?
+  initiatedBy String?
+  amount Int?
+  seat Int?
+  status String?
+  metaData Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

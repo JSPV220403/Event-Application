@@ -1,10 +1,13 @@
 import express from "express"
 import cors from "cors"
 import morgan from "morgan";
+import { startRemainderJob } from "./schedulers/reminder.scheduler";
 
 import router from "./router"
 
 const app = express()
+
+startRemainderJob();
 
 app.use(cors())
 

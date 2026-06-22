@@ -14,6 +14,8 @@ export const generateToken=async(data:any)=>{
     return jwt.sign(
         {
             id: data.id,
+            name:data.name,
+            phoneNumber: data.phone_number,
             email: data.email,
             role: data.role,
             status: user==null?"PENDING":user?.approved_by!=null?"APPROVED":"PENDING"

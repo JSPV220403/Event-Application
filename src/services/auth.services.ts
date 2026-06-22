@@ -4,12 +4,22 @@ import {prisma} from "../prisma"
 
 import {Role, Gender} from "@prisma/client"
 
+import validator from "validator";
+
 import {generateToken} from "../utils/jwt"
+
+import { registrationTemplate } from "../../templates/registration.template";
+
+import { sendMail } from "./mail.service";
+
+import { resend } from "../config/resend";
+
 import { connect } from "node:http2"
 
 
 export const register = async(data:any)=>{
     try{
+       
         const existingUser = await prisma.users.findFirst(
             {
                 where:{
@@ -31,6 +41,22 @@ export const register = async(data:any)=>{
                 success: false,
                 message: "Email/Phone number already exist",
                 status: 400
+            }
+        }
+
+        if(!validator.isStrongPassword(
+            data.password,{
+                minLength:8,
+                minLowercase: 1,
+                minUppercase: 1,
+                minNumbers: 1,
+                minSymbols:1
+            }
+        )){
+            return{
+                success: false,
+                status: 500,
+                message: "Password not satisfying the constraints"
             }
         }
         
@@ -78,6 +104,9 @@ export const register = async(data:any)=>{
             )
             
         }
+
+        const html= await registrationTemplate(data?.name, data?.email,data?.role);
+        await sendMail("Registration Successfull",html)
 
         return{
             success: true,

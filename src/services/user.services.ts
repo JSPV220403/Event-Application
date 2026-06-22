@@ -1,11 +1,20 @@
 import {prisma} from "../prisma"
 
+import { ticketBookingTemplate } from "../../templates/ticketBooking.template";
+import { ticketCancellationTemplate } from "../../templates/ticketCancellation.template";
+
+import { sendMail } from "./mail.service";
+
 export const bookTicket = async(data:any, user: any)=>{
     try{
+
+        console.log("Data: ",data," User: ",user);
+
         const isExist= await prisma.event_Schedules.findUnique({
             where:{
                 id: data?.id,
-            }
+            },
+           
         })
         if(!isExist){
             return {
@@ -14,6 +23,21 @@ export const bookTicket = async(data:any, user: any)=>{
                 data:{}
             }
         }
+        console.log("Schedule: ",isExist);
+        const actualEvent= await prisma.events.findFirst(
+            {
+                where:{
+                    id: isExist?.event_id
+                }
+            }
+        )
+        console.log("Event: ",actualEvent);
+        const scheduleAddress= await prisma.addresses.findFirst({
+            where:{
+                schedule_id:data?.id
+            }
+        })
+        console.log("Actual Address: ",scheduleAddress);
         if(data?.seats<=0){
             return{
                 status: 400,
@@ -21,6 +45,7 @@ export const bookTicket = async(data:any, user: any)=>{
                 data:{}
             }
         }
+        
     const total_tickets= await prisma.event_Schedules.findFirst({
         where:{
             id: data?.id
@@ -51,7 +76,10 @@ export const bookTicket = async(data:any, user: any)=>{
                 }
             }
         )
-
+        const eventDate= `${isExist?.date.getDate()}-${isExist?.date.getMonth()}-${isExist?.date.getFullYear()}` 
+        console.log("Actual Date: ",eventDate);
+        const html= await ticketBookingTemplate(user?.name??"", actualEvent?.name??"", eventDate, isExist?.time, data?.seats, scheduleAddress?.address??"" )
+        await sendMail("Enjoyment on the way!!!", html)
         return {
             status: 200,
             message: "Successfully booked",
@@ -93,7 +121,26 @@ export const cancelTicket = async(data:any, user: any)=>{
                 data:{}
             }
         }
+        const eventSchedule = await prisma.event_Schedules.findFirst({
+            where:{
+                id: ticket?.schedule_id
+            },
+            include:{
+                address:true
+            }
+        })
+        const actualEvent = await prisma.events.findFirst({
+            where:{
+                id: eventSchedule?.event_id,
+            }
+        })
+
+
+        console.log("Event Schedule: ",eventSchedule,"\nActual Event: ",actualEvent);
         if(ticket){
+            const eventDate = `${eventSchedule?.date.getDate()}-${eventSchedule?.date.getMonth()}-${eventSchedule?.date.getFullYear()}` 
+            const html= await ticketCancellationTemplate(user?.name,actualEvent?.name??"", eventDate, eventSchedule?.time??"", ticket?.seat_count, eventSchedule?.address[0]?.address??"");
+            await sendMail("Ticket Cancellation Mail", html);
             return{
                 status:200,
                 message: "Canceled Successfully",
@@ -127,7 +174,8 @@ export const bookHistory = async(user: any)=>{
             include:{
                 schedule:{
                     include:{
-                        event:true
+                        event:true,
+                        address:true,
                     }
                 }
             }
@@ -166,4 +214,12 @@ export const bookHistory = async(user: any)=>{
         }
     }
     
+}
+
+export const myTransaction = async(user:any)=>{
+    const transactions = await prisma.payments.findMany({
+        where:{
+            initiatedBy: user?.userId,
+        }
+    })
 }

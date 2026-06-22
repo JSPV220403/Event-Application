@@ -3,13 +3,16 @@ import {prisma} from "../prisma"
 
 export const createEvent = async(data:any, user:any)=>{
     try{
+        
         console.log("Payload: ",data)
+
         if(user?.status=="PENDING"){
             return {
                 status: 401,
                 message: "you are not ADMIN/ORGANIZER"
             }
         }
+
         const event= await prisma.events.create({
             data:{
                 name: data.name,
@@ -70,26 +73,38 @@ export const createEvent = async(data:any, user:any)=>{
             status: 200,
             message: "Successfully created and waiting for admin approval"
         }
-    }catch(e){
+
+    }
+    catch(e){
         console.log(e);
 
         return {
         status: 500,
         message: "Internal server error"
         }
+    
     }  
 }
 
 export const eventById = async(data:any)=>{
     try{
+        
         const event = await prisma.events.findFirst({
             where:{
                 id: data?.id
             },
             include:{
                 category:true,
-                schedule: true,
-                organizer:true
+                schedule: {
+                    where:{
+                        is_active:true
+                    },
+                    include:{
+                        address:true
+                    }
+                },
+                organizer:true,
+            
             }
         })
 
@@ -133,7 +148,11 @@ export const updateEvent = async(data:any, user:any)=>{
                 id: data?.id,
             },
             include:{
-                schedule:true
+                schedule:{
+                    where:{
+                        is_active:true
+                    }
+                }
             }
         })
 
@@ -357,8 +376,11 @@ export const eventList = async(data:any,user:any)=>{
                 data:[]
             }
         }
+
         let filter = data?.filter??"public"
-        let search= data?.search??"";
+
+        let search = data?.search??"";
+
         let whereCondition:any={ 
             is_active: true
         }
@@ -412,48 +434,13 @@ export const eventList = async(data:any,user:any)=>{
         }
 
         else if(user?.role=="ORGANIZER"){
-            if(filter == "all"){
-                
-                whereCondition.organizer_id= user?.id;
-            }
-            else if(filter=="approved"){
-                
-                whereCondition.organizer_id= user?.id,
-                whereCondition.approval={
-                    some:{
-                        approved_by:{
-                            not:null,
-                        }
-                    }
-                }
-            }
-            else if(filter == "unapproved"){
-                
-                whereCondition.organizer_id= user?.id,
-                whereCondition.approval={
-                    some:{
-                        approved_by:null,
-                    }
-                }
-            }
-            else if(filter == "public"){
-                whereCondition.approval={
-                    some:{
-                        approved_by:{
-                            not: null,
-                        }
-                    }
-                }
-            }
+            whereCondition.organizer_id= user?.id;
         }
 
         else if(user?.role=="ADMIN"){
-            if(filter == "all"){
+            
+            if(filter=="approved"){
                 
-            }
-            else if(filter=="approved"){
-                
-                //whereCondition.organizer_id= user?.id,
                 whereCondition.approval={
                     some:{
                         approved_by:{
@@ -464,28 +451,20 @@ export const eventList = async(data:any,user:any)=>{
             }
             else if(filter == "unapproved"){
                 
-                //whereCondition.organizer_id= user?.id,
                 whereCondition.approval={
                     some:{
                         approved_by:null,
                     }
                 }
             }
-            else if(filter == "public"){
-                whereCondition.approval={
-                    some:{
-                        approved_by:{
-                            not: null,
-                        }
-                    }
-                }
-            }
+            
         }
 
         let result = await prisma.events.findMany({
             where: whereCondition,
 
             include:{
+                approval:true,
                 organizer:true,
                 category:true,
                 schedule:{
@@ -502,25 +481,75 @@ export const eventList = async(data:any,user:any)=>{
 
         const now = new Date();
 
-        result = result
-        .map(event => ({
-            ...event,
-            schedule: event.schedule.filter(schedule => {
+
+result = result
+    .map(event => ({
+        ...event,
+        schedule: event.schedule.filter(schedule => {
 
             const eventDateTime = new Date(
                 `${schedule.date.toISOString().split("T")[0]}T${schedule.time}`
             );
 
             return eventDateTime > now;
+        })
+    }))
+    .filter(event => event.schedule.length > 0);
+
+result = await Promise.all(
+    result.map(async (event) => {
+
+        const schedulesWithSeats = await Promise.all(
+            event.schedule.map(async (schedule) => {
+
+                const filledSeats = await prisma.sold_Tickets.aggregate({
+                    where: {
+                        schedule_id: schedule.id,
+                        is_active: true
+                    },
+                    _sum: {
+                        seat_count: true
+                    }
+                });
+
+                const bookedSeats =
+                    Number(filledSeats._sum.seat_count ?? 0);
+
+                return {
+                    ...schedule,
+                    availableSeats:
+                        schedule.venue_capacity - bookedSeats
+                };
             })
-        }))
-        .filter(event => event.schedule.length > 0);
+        );
 
         return {
-            status: 200,
-            message: "Successful",
-            data:result
-        }
+            ...event,
+            schedule: schedulesWithSeats
+        };
+    })
+);
+
+   const formattedResult = result.map(event => ({
+    event: event.id,
+    name: event.name,
+    category: event.category,
+    category_id: event.category_id,
+    description: event.description,
+    organizer_id: event.organizer_id,
+    organizer: event.organizer,
+    schedule: event.schedule,
+    is_approved:
+      event.approval[0]?.approved_by == null
+        ? "unapproved"
+        : "approved"
+}));
+
+    return {
+        status: 200,
+        message: "Successful",
+        data:result
+    }
     }catch(e){
         return {
             status: 500,

@@ -3,13 +3,13 @@ import {prisma} from "../prisma"
 
 export const createCategory = async(data:any, user:any)=>{
     try{
+        
         if(user?.status=="PENDING"){
             return {
                 status: 401,
                 message: "you are not ADMIN/ORGANIZER"
             }
         }
-
         
         const isExist= await prisma.categories.findFirst({
             where:{
@@ -89,7 +89,7 @@ export const updateCategory = async(data:any, user:any)=>{
             }
         }
 
-        if(category.created_by!=user?.id){
+        if(category.created_by!=user?.id && user?.role!= "ADMIN"){
             return{
                 status: 401,
                 message: "UnAthorized to change"
@@ -151,7 +151,7 @@ export const deleteCategory = async(data:any, user:any)=>{
                     message: "Category not found"
                 }
             }
-            if(category.created_by!= user?.id){
+            if(category.created_by!= user?.id && user?.role!= "ADMIN"){
                 console.log("Created by someone. but, another one trying to delete")
                 return {
                     status: 401,

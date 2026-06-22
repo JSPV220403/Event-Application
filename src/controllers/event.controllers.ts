@@ -7,7 +7,7 @@ export const createEvent = async(req: Request, res:Response)=>{
 }
 
 export const eventById= async(req:Request, res:Response)=>{
-    const result = await eventService.eventById(req?.body);
+    const result = await eventService.eventById(req?.query);
     res.status(result?.status).json(result);
 }
 
@@ -22,7 +22,7 @@ export const updateEvent = async(req:Request, res: Response)=>{
 }
 
 export const eventList = async(req: Request, res: Response)=>{
-    const result = await eventService.eventList(req?.body, (req as any).user)
+    const result = await eventService.eventList(req?.query, (req as any).user)
     return res.status(result.status).json(result)
 }
 

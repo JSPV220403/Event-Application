@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as adminService from "../services/admin.service"
 
 export const organizersAdminsList = async(req:Request, res:Response)=>{
-    const result = await adminService.organizersAdminsList(req?.body,(req as any).user)
+    const result = await adminService.organizersAdminsList(req?.query?.data,(req as any).user)
     return res.status(result.status).json(result)
 }
 
