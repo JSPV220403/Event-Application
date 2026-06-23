@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    "**/node_modules/.prisma": true
+  },
+
+  "files.watcherExclude": {
+    "**/node_modules/.prisma/**": true
+  },
+
+  "search.exclude": {
+    "**/node_modules/.prisma/**": true
+  }
+}

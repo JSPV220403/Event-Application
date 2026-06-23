@@ -5,9 +5,183 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  //url = env("DATABASE_URL")
+}
+
+model Addresses{
+  id String @id @default(uuid())
+  user_id String?
+  schedule_id String?
+  address String @db.VarChar(255)
+  pincode String @db.VarChar(12)
+  district_id String?
+  state_id String?
+  country_id String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean @default(true)
+
+  user Users? @relation(fields: [user_id], references: [id])
+  schedules Event_Schedules? @relation(fields: [schedule_id], references: [id])
+  district Districts? @relation(fields: [district_id], references: [id])
+  state States? @relation(fields: [state_id], references: [id])
+  country Countries? @relation(fields: [country_id], references: [id])
+}
+
+model Approvals{
+  id String @id @default(uuid())
+  user_id String? @unique
+  event_id String? @unique
+  approved_by String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  requester Users? @relation("RequestedBy",fields: [user_id], references: [id])
+  approver Users? @relation("ApprovedBy",fields: [approved_by], references: [id])
+  events Events? @relation(fields: [event_id], references: [id])
+}
+
+model Categories{
+  id String @id @default(uuid())
+  name String @db.VarChar(50)
+  created_by String 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean @default(true)
+
+  user Users @relation(fields: [created_by], references: [id])
+  event Events[]
+}
+
+model Countries{
+  id String @id @default(uuid())
+  name String @db.VarChar(50)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  state States[]
+  address Addresses[]
+
+}
+
+model Districts{
+  id String @id @default(uuid())
+  name String @db.VarChar(50)
+  state_id String @default(uuid())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  state States @relation(fields: [state_id], references: [id])
+  address Addresses[]
+}
+
+enum Gender{
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Role{
+  USER
+  ADMIN
+  ORGANIZER
+}
+
+model Event_Schedules{
+  id String @id @default(uuid())
+  event_id String
+  image_url String?
+  date DateTime @db.Date
+  time String @db.VarChar(10)
+  price Decimal @db.Decimal(10,2)
+  venue_capacity Int
+  map String?
+  is_active Boolean @default(true)
+
+  event Events @relation(fields: [event_id], references: [id])
+  soldTicket Sold_Tickets[]
+  address Addresses[]
+}
+
+model Events{
+  id String @id @default(uuid())
+  image_url String?
+  name String @db.VarChar(50)
+  description String
+  category_id String
+  organizer_id String
+  is_active Boolean @default(true)
+
+  schedule Event_Schedules[]
+  approval Approvals[]
+  category Categories @relation(fields: [category_id], references: [id])
+  organizer Users @relation(fields: [organizer_id], references: [id])
+}
+
+model Sold_Tickets{
+  id String @id @default(uuid())
+  schedule_id String 
+  user_id String
+  seat_count Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean @default(true)
+  is_remainded Boolean @default(false)
+
+  schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
+  user Users @relation(fields: [user_id], references: [id])
+
+}
+
+model States{
+  id String @id @default(uuid())
+  name String @db.VarChar(50)
+  country_id String @default(uuid())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  country Countries @relation(fields: [country_id], references: [id])
+  district Districts[]
+  address Addresses[]
+
+}
+
+model Users{
+  id String @id @default(uuid())
+  image_url String?
+  name String @db.VarChar(50)
+  gender Gender
+  phone_number String @unique @db.VarChar(16)
+  email String @unique @db.VarChar(255)
+  password String
+  role Role
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_active Boolean @default(true)
+
+  requested_approvals Approvals[] @relation("RequestedBy")
+  approved_approvals Approvals[] @relation("ApprovedBy")
+  address Addresses[]
+  category Categories[]
+  soldTicket Sold_Tickets[]
+  event Events[]
+}
+
+model Payments{
+  id String @id @default(uuid())
+  schedule_id String?
+  ticket_id String?  @unique
+  order_id String?
+  payment_id String?
+  initiatedBy String?
+  amount Int?
+  seat Int?
+  status String?
+  metaData Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
