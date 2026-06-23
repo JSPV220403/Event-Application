@@ -16,3 +16,8 @@ export const bookHistory = async(req:Request, res:Response)=>{
     const result= await userServices.bookHistory((req as any).user);
     res.status(result?.status).json(result)
 }
+
+export const transactionHistory = async(req:Request, res:Response)=>{
+    const result = await userServices.transactionHistory((req as any).user);
+    res.status(result?.status).json(result);
+}

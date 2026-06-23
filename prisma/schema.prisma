@@ -105,6 +105,7 @@ model Event_Schedules{
   event Events @relation(fields: [event_id], references: [id])
   soldTicket Sold_Tickets[]
   address Addresses[]
+  payment Payments[]
 }
 
 model Events{
@@ -169,19 +170,23 @@ model Users{
   category Categories[]
   soldTicket Sold_Tickets[]
   event Events[]
+  payment Payments[]
 }
 
 model Payments{
   id String @id @default(uuid())
-  schedule_id String?
+  schedule_id String
   ticket_id String?  @unique
   order_id String?
   payment_id String?
-  initiatedBy String?
+  initiatedBy String
   amount Int?
   seat Int?
   status String?
   metaData Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user Users @relation(fields: [initiatedBy], references: [id])
+  schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
 }

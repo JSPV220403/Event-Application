@@ -7,6 +7,7 @@ const router= express.Router()
 
 router.post("/bookTicket", authmiddleware, controller.bookTicket);
 router.patch("/cancelTicket", authmiddleware,controller.cancelTicket);
-router.get("/bookHistory", authmiddleware, controller.bookHistory)
+router.get("/bookHistory", authmiddleware, controller.bookHistory);
+router.get("/myTransactions", authmiddleware, controller.transactionHistory);
 
 export default router

@@ -1,7 +1,7 @@
-import PDFDocument from "pdfkit";
 import {prisma} from "../prisma"
-
+import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
+import bwipjs from "bwip-js";
 import { Response } from "express";
 
 export const generateTicketPdf = async (
@@ -10,7 +10,7 @@ export const generateTicketPdf = async (
 ) => {
   const doc = new PDFDocument({
     size: "A4",
-    margin: 50,
+    margin: 0,
   });
 
   res.setHeader(
@@ -26,204 +26,219 @@ export const generateTicketPdf = async (
   doc.pipe(res);
 
   /*
-  =========================
+  =====================================
+  PAGE BACKGROUND
+  =====================================
+  */
+
+  doc.rect(0, 0, 595, 842).fill("#F3F4F6");
+
+  /*
+  =====================================
+  MAIN TICKET CARD
+  =====================================
+  */
+
+  const x = 40;
+  const y = 120;
+  const width = 515;
+  const height = 560;
+
+  doc
+    .roundedRect(
+      x,
+      y,
+      width,
+      height,
+      25
+    )
+    .fill("#111827");
+
+  /*
+  =====================================
   HEADER
-  =========================
+  =====================================
   */
 
   doc
-    .rect(0, 0, doc.page.width, 120)
-    .fill("#4F46E5");
-
-  doc
-    .fillColor("white")
-    .fontSize(26)
     .font("Helvetica-Bold")
+    .fontSize(24)
+    .fillColor("#FFFFFF")
     .text(
-      "EVENT BOOKING PLATFORM",
-      0,
-      35,
-      {
-        align: "center",
-      }
+      "EVENT BOOKING",
+      70,
+      160
     );
 
   doc
-    .fontSize(18)
+    .fontSize(14)
+    .fillColor("#A78BFA")
     .text(
-      "EVENT TICKET",
-      {
-        align: "center",
-      }
+      "Your Experience Starts Here",
+      70,
+      195
     );
 
   /*
-  =========================
-  TICKET CARD
-  =========================
+  =====================================
+  PREMIUM BADGE
+  =====================================
   */
 
   doc
     .roundedRect(
-      50,
-      150,
-      500,
-      550,
-      15
+      410,
+      160,
+      100,
+      35,
+      18
     )
-    .lineWidth(2)
-    .strokeColor("#E5E7EB")
-    .stroke();
+    .fill("#FBBF24");
+
+  doc
+    .fillColor("#111827")
+    .fontSize(12)
+    .font("Helvetica-Bold")
+    .text(
+      "PREMIUM",
+      432,
+      172
+    );
 
   /*
-  =========================
-  TICKET ID
-  =========================
+  =====================================
+  EVENT NAME
+  =====================================
   */
 
   doc
     .font("Helvetica-Bold")
-    .fontSize(18)
-    .fillColor("#4F46E5")
+    .fontSize(34)
+    .fillColor("white")
     .text(
-      "Ticket ID",
-      80,
-      180
+      ticket.event.name,
+      70,
+      250,
+      {
+        width: 320,
+      }
     );
-
-  doc
-    .font("Helvetica")
-    .fontSize(13)
-    .fillColor("black")
-    .text(
-      ticket.ticket.id,
-      80,
-      210
-    );
-
-  doc
-    .moveTo(80, 250)
-    .lineTo(520, 250)
-    .strokeColor("#D1D5DB")
-    .stroke();
 
   /*
-  =========================
+  =====================================
   EVENT DETAILS
-  =========================
-  */
-
-  let y = 280;
-
-  const addRow = (
-    label: string,
-    value: string
-  ) => {
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(13)
-      .fillColor("#111827")
-      .text(
-        label,
-        80,
-        y
-      );
-
-    doc
-      .font("Helvetica")
-      .text(
-        value,
-        240,
-        y,
-        {
-          width: 250,
-        }
-      );
-
-    y += 40;
-  };
-
-  addRow(
-    "Event",
-    ticket.event.name
-  );
-
-  addRow(
-    "Date",
-    new Date(
-      ticket.schedule.date
-    ).toLocaleDateString()
-  );
-
-  addRow(
-    "Time",
-    ticket.schedule.time
-  );
-
-  addRow(
-    "Seats Booked",
-    ticket?.ticket?.seat_count.toString()
-  );
-
-  addRow(
-    "Venue",
-    ticket.schedule.address?.[0]
-      ?.address ??
-      "Venue Not Available"
-  );
-
-  /*
-  =========================
-  ATTENDEE SECTION
-  =========================
+  =====================================
   */
 
   doc
-    .moveTo(80, 500)
-    .lineTo(520, 500)
-    .strokeColor("#D1D5DB")
-    .stroke();
-
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(18)
-    .fillColor("#4F46E5")
-    .text(
-      "Attendee Information",
-      80,
-      530
-    );
-
-  doc
+    .fontSize(14)
     .font("Helvetica")
-    .fontSize(13)
-    .fillColor("black")
-    .text(
-      `Name : ${ticket.user.name}`,
-      80,
-      570
-    );
+    .fillColor("#D1D5DB");
 
   doc.text(
-    `Email : ${ticket.user.email}`,
-    80,
-    600
+    `Date: ${new Date(
+      ticket.schedule.date
+    ).toLocaleDateString()}`,
+    70,
+    360
+  );
+
+  doc.text(
+    `Time: ${ticket.schedule.time}`,
+    70,
+    390
+  );
+
+  doc.text(
+    `Address: ${
+      ticket.schedule.address?.[0]
+        ?.address ??
+      "Venue Not Available"
+    }`,
+    70,
+    420,
+    {
+      width: 260,
+    }
+  );
+
+  doc.text(
+    `Seats: ${ticket.ticket.seat_count}`,
+    70,
+    485
   );
 
   /*
-  =========================
-  QR CODE
-  =========================
+  =====================================
+  ATTENDEE SECTION
+  =====================================
   */
 
-  const qrData =
+  doc
+    .fillColor("#A78BFA")
+    .font("Helvetica-Bold")
+    .fontSize(16)
+    .text(
+      "ATTENDEE",
+      70,
+      550
+    );
+
+  doc
+    .fillColor("white")
+    .font("Helvetica")
+    .fontSize(14)
+    .text(
+      ticket.user.name,
+      70,
+      585
+    );
+
+  doc
+    .fillColor("#D1D5DB")
+    .text(
+      ticket.user.email,
+      70,
+      615
+    );
+
+  /*
+  =====================================
+  DASHED DIVIDER
+  =====================================
+  */
+
+  for (
+    let i = 360;
+    i <= 360;
+    i++
+  ) {
+    doc
+      .moveTo(360, 180)
+      .lineTo(360, 640)
+      .dash(8, {
+        space: 5,
+      })
+      .strokeColor("#6B7280")
+      .stroke();
+  }
+
+  doc.undash();
+
+  /*
+  =====================================
+  QR CODE
+  =====================================
+  */
+
+  const qr =
     await QRCode.toDataURL(
       ticket.ticket.id
     );
 
   const qrBuffer =
     Buffer.from(
-      qrData.replace(
+      qr.replace(
         /^data:image\/png;base64,/,
         ""
       ),
@@ -232,44 +247,80 @@ export const generateTicketPdf = async (
 
   doc.image(
     qrBuffer,
-    420,
-    540,
+    400,
+    250,
     {
-      width: 90,
+      width: 120,
     }
   );
 
   doc
-    .fontSize(10)
-    .fillColor("gray")
+    .fontSize(11)
+    .fillColor("#D1D5DB")
     .text(
-      "Scan to verify ticket",
-      405,
-      640
+      "Scan To Verify",
+      425,
+      380
     );
 
   /*
-  =========================
-  FOOTER
-  =========================
+  =====================================
+  TICKET ID
+  =====================================
   */
 
   doc
-    .rect(
-      0,
-      750,
-      doc.page.width,
-      50
-    )
-    .fill("#F3F4F6");
+    .fontSize(11)
+    .fillColor("#A78BFA")
+    .font("Helvetica-Bold")
+    .text(
+      "TICKET ID",
+      410,
+      450
+    );
 
   doc
-    .fillColor("#374151")
-    .fontSize(11)
+    .fontSize(9)
+    .fillColor("#D1D5DB")
+    .font("Helvetica")
     .text(
-      "Please carry this ticket during entry. Thank you for booking with Event Booking Platform.",
-      40,
-      770,
+      ticket.ticket.id,
+      385,
+      475,
+      {
+        width: 150,
+        align: "center",
+      }
+    );
+
+  /*
+
+  /*
+  =====================================
+  FOOTER
+  =====================================
+  */
+
+  doc
+    .fontSize(11)
+    .fillColor("#9CA3AF")
+    .text(
+      "Please carry this ticket during entry.",
+      0,
+      730,
+      {
+        align: "center",
+      }
+    );
+
+  doc
+    .fillColor("#A78BFA")
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .text(
+      "www.eventbooking.com",
+      0,
+      755,
       {
         align: "center",
       }
@@ -278,7 +329,7 @@ export const generateTicketPdf = async (
   doc.end();
 };
 
-export const getTicket= async (ticketId:string)=>{
+export const getTicket = async (ticketId:string)=>{
   try{
     const ticket= await prisma.sold_Tickets.findFirst({
       where:{
@@ -316,3 +367,4 @@ export const getTicket= async (ticketId:string)=>{
     return;
   }
 }
+

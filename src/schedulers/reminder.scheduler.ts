@@ -27,7 +27,7 @@ export const startRemainderJob =async()=>{
             })
 
             if(eventSchedules.length>0){
-                eventSchedules.map(async schedule=>{
+                eventSchedules.map(async (schedule:any)=>{
                     const tickets= await prisma.sold_Tickets.findMany({
                         where:{
                             schedule_id: schedule?.id,
@@ -41,7 +41,7 @@ export const startRemainderJob =async()=>{
                         }
                     })
                     if(tickets.length>0){
-                        tickets.map(async ticket=>{
+                        tickets.map(async (ticket:any)=>{
                             console.log(ticket);
                             const user = await prisma.users.findFirst({
                                 where:{
