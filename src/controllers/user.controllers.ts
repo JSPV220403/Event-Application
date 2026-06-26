@@ -21,3 +21,8 @@ export const transactionHistory = async(req:Request, res:Response)=>{
     const result = await userServices.transactionHistory((req as any).user);
     res.status(result?.status).json(result);
 }
+
+export const unSubscribe = async(req:Request, res:Response)=>{
+    const result = await userServices.unSubscribe(req?.query?.userId);
+    res.status(result.status).json(result);
+}

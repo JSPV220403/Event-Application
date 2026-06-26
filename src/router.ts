@@ -5,7 +5,7 @@ import userRoutes from "./routes/user.routes"
 import adminRoutes from "./routes/admin.routes"
 import categoryRoutes from "./routes/category.routes"
 import paymentRoutes from "./routes/payment.routes"
-import ticketRoutes from "./routes/ticket.routes"
+import pdfRoutes from "./routes/pdf.routes"
 
 const router = express.Router()
 
@@ -15,7 +15,7 @@ router.use("/user", userRoutes)
 router.use("/admin", adminRoutes)
 router.use("/category", categoryRoutes)
 router.use("/payment",paymentRoutes)
-router.use("/ticket", ticketRoutes)
+router.use("/pdf", pdfRoutes)
 
 
 export default router

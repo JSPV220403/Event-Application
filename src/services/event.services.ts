@@ -3,9 +3,6 @@ import {prisma} from "../prisma"
 
 export const createEvent = async(data:any, user:any)=>{
     try{
-        
-        console.log("Payload: ",data)
-
         if(user?.status=="PENDING"){
             return {
                 status: 401,
@@ -13,8 +10,11 @@ export const createEvent = async(data:any, user:any)=>{
             }
         }
 
+        console.log(data)
+
         const event= await prisma.events.create({
             data:{
+                image_url: data?.image??null,
                 name: data.name,
                 description: data?.description,
                 category:{
@@ -39,8 +39,10 @@ export const createEvent = async(data:any, user:any)=>{
                 }
             }
         })
+        const schedules= JSON.parse(data?.schedules)
+        for(let items of schedules){
+            items= JSON.parse(JSON.stringify(items))
 
-        for(const items of data.schedules){
             const schedule= await prisma.event_Schedules.create({
                 data:{
                     date: new Date(items?.date),
@@ -89,7 +91,7 @@ export const createEvent = async(data:any, user:any)=>{
 export const eventById = async(data:any)=>{
     try{
         
-        const event = await prisma.events.findFirst({
+        let event = await prisma.events.findFirst({
             where:{
                 id: data?.id
             },
@@ -114,6 +116,11 @@ export const eventById = async(data:any)=>{
                 message: "Event Not Found",
                 data:{}
             }
+        }
+
+        event = {
+            ...event,
+            image_url: `http://localhost:8000/eventImages/${event?.image_url}`
         }
 
         return {
@@ -175,6 +182,7 @@ export const updateEvent = async(data:any, user:any)=>{
                 id: data?.id
             },
             data:{
+                image_url:data?.image,
                 name: data.name,
                 description: data?.description,
                 category:{
@@ -198,7 +206,10 @@ export const updateEvent = async(data:any, user:any)=>{
 
         let existingSchedules: string[]=[];
 
-        for(const items of data.schedules){
+        const schedules= JSON.parse(data?.schedules)
+
+
+        for(const items of schedules){
 
             if(items?.id){
 
@@ -485,6 +496,7 @@ export const eventList = async(data:any,user:any)=>{
 result = result
     .map(event => ({
         ...event,
+        image_url: event?.image_url!=null?`http://localhost:8000/eventImages/${event?.image_url}`:null,
         schedule: event.schedule.filter(schedule => {
 
             const eventDateTime = new Date(
@@ -515,10 +527,12 @@ result = await Promise.all(
                 const bookedSeats =
                     Number(filledSeats._sum.seat_count ?? 0);
 
+                const availableSeats = schedule.venue_capacity - bookedSeats;
                 return {
                     ...schedule,
-                    availableSeats:
-                        schedule.venue_capacity - bookedSeats
+                    availableSeats,
+                    bookedSeats: bookedSeats== schedule?.venue_capacity? 0: bookedSeats,
+                    
                 };
             })
         );
@@ -530,20 +544,8 @@ result = await Promise.all(
     })
 );
 
-   const formattedResult = result.map(event => ({
-    event: event.id,
-    name: event.name,
-    category: event.category,
-    category_id: event.category_id,
-    description: event.description,
-    organizer_id: event.organizer_id,
-    organizer: event.organizer,
-    schedule: event.schedule,
-    is_approved:
-      event.approval[0]?.approved_by == null
-        ? "unapproved"
-        : "approved"
-}));
+    console.log("Result: ", result);
+
 
     return {
         status: 200,

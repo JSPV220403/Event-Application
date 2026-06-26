@@ -2,6 +2,7 @@ import {prisma} from "../prisma"
 
 import { ticketBookingTemplate } from "../../templates/ticketBooking.template";
 import { ticketCancellationTemplate } from "../../templates/ticketCancellation.template";
+import { unsubscribeTemplate } from "../../templates/unsubscribe.template";
 
 import { sendMail } from "./mail.service";
 import { trace } from "node:console";
@@ -271,6 +272,44 @@ export const transactionHistory= async(user:any)=>{
         return{
             status:500,
             message:"Internal server error"
+        }
+    }
+}
+
+export const unSubscribe = async(userId:any)=>{
+    try{
+        const user= await prisma.users.findUnique({
+            where:{
+                id: userId,
+                is_active: true,
+            }
+        })
+
+        if(!user){
+            return{
+                status: 404,
+                message: "User not found",
+            }
+        }
+        await prisma.users.update({
+            data:{
+                is_subscribed:false
+            },
+            where:{
+                id:userId
+            },
+        })
+        const html= await unsubscribeTemplate(user?.name);
+        sendMail("We miss you lot", html);
+        return{
+            status:200,
+            message:"Unsubscribe successfull"
+        }
+    }catch(e){
+        console.log(e);
+        return{
+            status: 500,
+            message: "Internal server error"
         }
     }
 }

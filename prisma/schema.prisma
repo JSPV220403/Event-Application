@@ -116,6 +116,7 @@ model Events{
   category_id String
   organizer_id String
   is_active Boolean @default(true)
+  is_promoted Boolean @default(false)
 
   schedule Event_Schedules[]
   approval Approvals[]
@@ -163,6 +164,7 @@ model Users{
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   is_active Boolean @default(true)
+  is_subscribed Boolean @default(true)
 
   requested_approvals Approvals[] @relation("RequestedBy")
   approved_approvals Approvals[] @relation("ApprovedBy")

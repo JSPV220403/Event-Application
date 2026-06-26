@@ -9,5 +9,6 @@ router.post("/bookTicket", authmiddleware, controller.bookTicket);
 router.patch("/cancelTicket", authmiddleware,controller.cancelTicket);
 router.get("/bookHistory", authmiddleware, controller.bookHistory);
 router.get("/myTransactions", authmiddleware, controller.transactionHistory);
+router.get("/unsubscribe",controller.unSubscribe)
 
 export default router
