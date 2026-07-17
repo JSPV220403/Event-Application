@@ -1,0 +1,941 @@
+openapi: 3.0.0
+
+info:
+  title: EVENT-Application API
+  version: 1.0.0
+  description: |
+    Comprehensive REST API for the EVENT-Application platform.
+    Covers authentication, admin management, event lifecycle,
+    category management, ticketing, and user transactions.
+
+servers:
+  - url: http://localhost:3000
+    description: Auth, Category and User service
+  - url: http://localhost:8000
+    description: Event, Ticket and Transaction service
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, gender, phone_number, email, password, role, address, pincode]
+      properties:
+        name:
+          type: string
+          example: organizer3
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          example: MALE
+        phone_number:
+          type: string
+          example: "+91 12345 67899"
+        email:
+          type: string
+          format: email
+          example: organizer@gmail.com
+        password:
+          type: string
+          format: password
+          example: organizer
+        role:
+          type: string
+          enum: [ADMIN, ORGANIZER, USER]
+          example: ORGANIZER
+        address:
+          type: string
+          example: Kotturpuram
+        pincode:
+          type: string
+          example: "654321"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ADMIN, ORGANIZER, USER]
+        gender:
+          type: string
+        phone_number:
+          type: string
+        address:
+          type: string
+        pincode:
+          type: string
+
+    OrganizerAdminApprovalRequest:
+      type: object
+      required: [organizerId, status]
+      properties:
+        organizerId:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
+
+    EventApprovalRequest:
+      type: object
+      required: [eventId, status]
+      properties:
+        eventId:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
+
+    AdminListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserProfile'
+
+    CreateEventRequest:
+      type: object
+      required: [title, description, date, location, capacity, price, categoryId]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        location:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+          format: float
+        categoryId:
+          type: string
+
+    UpdateEventRequest:
+      type: object
+      required: [eventId]
+      properties:
+        eventId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        location:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+        categoryId:
+          type: string
+
+    CancelEventRequest:
+      type: object
+      required: [eventId]
+      properties:
+        eventId:
+          type: string
+
+    EventListRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        categoryId:
+          type: string
+        search:
+          type: string
+
+    EventObject:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        location:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+        categoryId:
+          type: string
+        organizerId:
+          type: string
+
+    EventListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventObject'
+        total:
+          type: integer
+        page:
+          type: integer
+
+    CreateCategoryRequest:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    UpdateCategoryRequest:
+      type: object
+      required: [categoryId, name, description]
+      properties:
+        categoryId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    CategoryObject:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    CategoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryObject'
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the category.
+          example: 7e956155-784d-42c9-a320-9ef9d18fb73b
+        name:
+          type: string
+          description: Name of the category.
+          example: general
+        created_by:
+          type: string
+          format: uuid
+          description: UUID of the user who created the category.
+          example: 5cf28012-9597-44d6-84f5-bf6cfd8290b5
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the category was created.
+          example: '2026-06-15T09:44:14.461Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the category was last updated.
+          example: '2026-06-15T10:30:21.678Z'
+        is_active:
+          type: boolean
+          description: Indicates whether the category is active.
+          example: true
+      required:
+        - id
+        - name
+        - created_by
+        - created_at
+        - updated_at
+        - is_active
+
+    GetCategoryByIdResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP status code of the response.
+          example: 200
+        message:
+          type: string
+          description: Human-readable response message.
+          example: Successfull
+        data:
+          $ref: '#/components/schemas/Category'
+      required:
+        - status
+        - message
+        - data
+
+    BookTicketRequest:
+      type: object
+      required: [eventId, userId]
+      properties:
+        eventId:
+          type: string
+        userId:
+          type: string
+
+    CancelTicketRequest:
+      type: object
+      required: [ticketId]
+      properties:
+        ticketId:
+          type: string
+
+    TicketObject:
+      type: object
+      properties:
+        id:
+          type: string
+        eventId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [BOOKED, CANCELLED]
+        bookedAt:
+          type: string
+          format: date-time
+
+    BookHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketObject'
+
+    TransactionObject:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [CREDIT, DEBIT]
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    MyTransactionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionObject'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and obtain JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+
+  /api/admin/organizersAdminsList:
+    get:
+      tags: [Admin]
+      summary: List all organizers
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of organizers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminListResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /api/admin/approval:
+    post:
+      tags: [Admin]
+      summary: Approve or reject an event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventApprovalRequest'
+      responses:
+        '200':
+          description: Event approval status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Event not found
+
+  /api/admin/organizerAdminApproval:
+    post:
+      tags: [Admin]
+      summary: Approve or reject an organizer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizerAdminApprovalRequest'
+      responses:
+        '200':
+          description: Organizer approval status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Organizer not found
+
+  /api/event/createEvent:
+    post:
+      tags: [Event]
+      summary: Create a new event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /api/event/updateEvent:
+    put:
+      tags: [Event]
+      summary: Update an existing event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: Event updated successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+
+  /api/event/cancel:
+    post:
+      tags: [Event]
+      summary: Cancel an event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelEventRequest'
+      responses:
+        '200':
+          description: Event cancelled successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+
+  /api/event/eventList:
+    post:
+      tags: [Event]
+      summary: List events
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventListRequest'
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventListResponse'
+        '401':
+          description: Unauthorized
+
+  /api/category/createCategory:
+    post:
+      tags: [Category]
+      summary: Create a new category
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Category created successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /api/category/listCateogry:
+    get:
+      tags: [Category]
+      summary: List all categories
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          description: Unauthorized
+
+  /api/category/updateCategory:
+    put:
+      tags: [Category]
+      summary: Update a category
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: Category updated successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Category not found
+
+  /api/category/deleteCategory:
+    delete:
+      tags: [Category]
+      summary: Delete a category
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: categoryId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category deleted successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Category not found
+
+  /api/user/bookTicket:
+    post:
+      tags: [User]
+      summary: Book a ticket for an event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookTicketRequest'
+      responses:
+        '201':
+          description: Ticket booked successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+
+  /api/user/bookHistory:
+    get:
+      tags: [User]
+      summary: Get booking history
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Booking history retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookHistoryResponse'
+        '401':
+          description: Unauthorized
+
+  /api/user/cancelTicket:
+    post:
+      tags: [User]
+      summary: Cancel a booked ticket
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelTicketRequest'
+      responses:
+        '200':
+          description: Ticket cancelled successfully
+        '401':
+          description: Unauthorized
+        '404':
+          description: Ticket not found
+
+  /api/pdf/ticketDownload:
+    get:
+      tags: [User]
+      summary: Download ticket as PDF
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: ticketId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF file returned
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: Ticket not found
+
+  /api/user/myTransactions:
+    get:
+      tags: [User]
+      summary: Get my transactions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Transaction history retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyTransactionsResponse'
+        '401':
+          description: Unauthorized
+
+  /api/category/getCategoryById:
+    get:
+      tags: [Category]
+      summary: Get Category By ID
+      description: Retrieves a single category record by its UUID.
+      operationId: getCategoryById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: The unique UUID identifier of the category.
+          schema:
+            type: string
+            format: uuid
+            example: 7e956155-784d-42c9-a320-9ef9d18fb73b
+      responses:
+        '200':
+          description: Category retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCategoryByIdResponse'
+              example:
+                status: 200
+                message: Successfull
+                data:
+                  id: 7e956155-784d-42c9-a320-9ef9d18fb73b
+                  name: general
+                  created_by: 5cf28012-9597-44d6-84f5-bf6cfd8290b5
+                  created_at: '2026-06-15T09:44:14.461Z'
+                  updated_at: '2026-06-15T10:30:21.678Z'
+                  is_active: true
+
+  /api/event/eventById:
+    get:
+      summary: Get Event By ID
+      operationId: eventById
+      tags: [Event]
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: The unique identifier of the event
+          schema:
+            type: string
+            format: uuid
+            example: 20ddf68d-2c4d-4d60-8c75-9839f3ce8161
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successful response with event details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Successfull
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 20ddf68d-2c4d-4d60-8c75-9839f3ce8161
+                      image_url:
+                        type: string
+                        nullable: true
+                        example: "http://localhost:8000/eventImages/event_..."
+                      name:
+                        type: string
+                        example: Image texting
+                      description:
+                        type: string
+                        example: image texting
+                      category_id:
+                        type: string
+                        format: uuid
+                        example: ada5ffae-df36-4cdc-8af7-4ecec544532e
+                      organizer_id:
+                        type: string
+                        format: uuid
+                        example: 9dec9274-6200-4358-8715-c3688c84f006
+                      is_active:
+                        type: boolean
+                        example: true
+                      is_promoted:
+                        type: boolean
+                        example: false
+                      category:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          name:
+                            type: string
+                            example: yoga
+                          created_by:
+                            type: string
+                            format: uuid
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                          is_active:
+                            type: boolean
+                      schedule:
+                        type: array
+                        items:
+                          type: object
+                        example: []
+                      organizer:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          image_url:
+                            type: string
+                            nullable: true
+                          name:
+                            type: string
+                            example: organizer1
+                          gender:
+                            type: string
+                            enum: [MALE, FEMALE, OTHER]
+                          phone_number:
+                            type: string
+                          email:
+                            type: string
+                            format: email
+                          role:
+                            type: string
+                            example: ORGANIZER
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                          is_active:
+                            type: boolean
+                          is_subscribed:
+                            type: boolean

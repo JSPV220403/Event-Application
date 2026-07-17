@@ -535,90 +535,6 @@ export const generateBookingsPdf = (
     .font("Helvetica")
     .fillColor("black");
 
-//   bookings.forEach(
-//     (
-//       booking,
-//       index
-//     ) => {
-//       /*
-//       Create new page if needed
-//       */
-//       if (y > 730) {
-//         doc.addPage();
-//         y = 50;
-//       }
-
-//       if (index % 2 === 0) {
-//         doc
-//           .rect(
-//             45,
-//             y - 5,
-//             510,
-//             22
-//           )
-//           .fill("#f9fafb");
-
-//         doc.fillColor("black");
-//       }
-
-//       doc.text(
-//         (index + 1).toString(),
-//         columns.sno,
-//         y
-//       );
-
-//       const formattedId =
-//   booking.ticketId.match(/.{1,12}/g)?.join("\n");
-
-// doc.text(
-//   formattedId,
-//   columns.ticketId,
-//   y,
-//   {
-//     width: 110,
-//   }
-// );
-
-//       doc.text(
-//         booking.name,
-//         columns.name,
-//         y,
-//         {
-//           width: 90,
-//         }
-//       );
-
-//       doc.text(
-//         booking.email,
-//         columns.email,
-//         y,
-//         {
-//           width: 130,
-//         }
-//       );
-
-//       doc.text(
-//         booking.phoneNumber,
-//         columns.phone,
-//         y
-//       );
-
-//       doc.text(
-//         booking.seats.toString(),
-//         columns.seats,
-//         y
-//       );
-
-//       doc.text(
-//         `${booking.paid}`,
-//         columns.amount,
-//         y
-//       );
-
-//       y += 25;
-//     }
-//   );
-
 bookings.forEach((booking, index) => {
   /*
   Create new page if needed
@@ -834,8 +750,6 @@ export const getSchedule = async(scheduleId:string)=>{
 
     return{formattedResult, total, eventName};
     
-
-    //console.log(fans);
   }catch(e){
     console.log(e);
     return{

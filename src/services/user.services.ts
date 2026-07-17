@@ -232,13 +232,15 @@ export const transactionHistory= async(user:any)=>{
         },
 
         include: {
-          schedule: {
-            include: {
-              event: true,
-              address: true,
-            },
-          },
-        },
+                    schedule:{
+                        include:{
+                            event:true,
+                            address:true
+                            }
+                        }
+                    }
+                
+        
       });
 
       console.log(transactions)

@@ -9,7 +9,6 @@ export const downloadTicket = async (
   try {
     const ticketId =
       req?.query?.ticketId!.toString();
-    //console.log("Ticket Id: ", ticketId)
     const ticket =
       await pdfService.getTicket(
         ticketId
@@ -21,16 +20,13 @@ export const downloadTicket = async (
           "Ticket not found",
       });
     }
-    //console.log(ticket)
 
     
 
     await pdfService.generateTicketPdf(
         ticket,
         res);
-    //   res.status(200).json({
-    //   message:"Done"
-    // })
+  
   } catch (error) {
     console.log(error);
 

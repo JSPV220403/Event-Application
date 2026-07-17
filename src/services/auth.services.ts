@@ -19,7 +19,55 @@ import { connect } from "node:http2"
 
 export const register = async(data:any)=>{
     try{
-       
+        if(data?.name==undefined){
+            return{
+                status:400,
+                message: "name field is undefined"
+            }
+        }
+        if(data?.gender==undefined){
+            return{
+                status:400,
+                message: "gender field is undefined"
+            }
+        }
+        if(data?.phone_number==undefined){
+            return{
+                status:400,
+                message: "phone number field is undefined"
+            }
+        }
+        if(data?.email==undefined){
+            return{
+                status:400,
+                message: "email field is undefined"
+            }
+        }
+        if(data?.password==undefined){
+            return{
+                status:400,
+                message: "password field is undefined"
+            }
+        }
+        if(data?.role==undefined){
+            return{
+                status:400,
+                message: "role field is undefined"
+            }
+        }
+        if(data?.address==undefined){
+            return{
+                status:400,
+                message: "address field is undefined"
+            }
+        }
+        if(data?.pincode==undefined){
+            return{
+                status:400,
+                message: "pincode field is undefined"
+            }
+        }
+
         const existingUser = await prisma.users.findFirst(
             {
                 where:{
@@ -30,8 +78,7 @@ export const register = async(data:any)=>{
                         {
                             phone_number: data?.phone_number
                         }
-                    ]
-                   
+                    ]                   
                 }
             }
         )
@@ -55,7 +102,7 @@ export const register = async(data:any)=>{
         )){
             return{
                 success: false,
-                status: 500,
+                status: 400,
                 message: "Password not satisfying the constraints"
             }
         }
@@ -131,6 +178,21 @@ export const login= async(data:any)=>{
     try{
 
         console.log("Request body: ", data);
+
+        if(data?.email==undefined){
+            return {
+                status: 400,
+                message: "email field is undefined"
+            }
+        }
+
+        if(data?.password==undefined){
+            return {
+                status: 400,
+                message: "password field is undefined"
+            }
+        }
+        
         const user = await prisma.users.findUnique({where:{email: data?.email}})
 
         if(!user){

@@ -59,13 +59,10 @@ export const verifyPayment =
     ) => {
 
         try {
-            console.log(data?.payment_status);
+            
             const paymentStatus = await razorpay.orders.fetch(data?.razorpay_order_id)
             console.log(paymentStatus?.status)
-            if (paymentStatus?.status == "paid") {
-                
-                console.log("Entered")
-                
+            if (paymentStatus?.status == "paid") {                
                 const isValid =
                     verifySignature.verifySignature(
                         data.razorpay_order_id,
@@ -106,23 +103,23 @@ export const verifyPayment =
 
                 console.log("Amount: ", amount);
 
-                const paymentStatus = await razorpay.orders.fetch(data.razorpay_order_id)
+                const metaData = await razorpay.orders.fetch(data.razorpay_order_id)
 
 
                 const ticket = await userService.bookTicket(data, user)
 
-
+                console.log("Data",data, "User",user)
                 const res = await prisma.payments.create({
                     data: {
                         ticket_id: paymentStatus?.status == "paid" ? (ticket?.data as any)?.id : "",
+                        schedule_id: data?.id??"",
                         status: data?.payment_status,
                         order_id: data?.razorpay_order_id,
                         payment_id: data?.razorpay_payment_id ?? "",
                         seat: data?.seats,
                         amount: amount,
-                        initiatedBy: user?.id,
-                        schedule_id: data?.id,
-                        metaData: JSON.parse(JSON.stringify(paymentStatus))
+                        initiatedBy: user?.id??"",
+                        metaData: JSON.parse(JSON.stringify(metaData))
                     }
                 })
 
@@ -136,20 +133,20 @@ export const verifyPayment =
             else {
 
                 console.log("Else called!!!")
-                const paymentStatus = await razorpay.orders.fetch(data.razorpay_order_id)
+                const metaData = await razorpay.orders.fetch(data.razorpay_order_id)
 
 
                 const res = await prisma.payments.create({
                     data: {
-
                         status: data?.payment_status,
                         order_id: data?.razorpay_order_id,
+                        ticket_id: "",
+                        schedule_id: data?.id??"",
                         payment_id: data?.razorpay_payment_id ?? "",
                         seat: data?.seats ?? 0,
                         amount: data?.amount ?? 0,
-                        initiatedBy: user?.id,
-                        schedule_id: data?.id,
-                        metaData: JSON.parse(JSON.stringify(paymentStatus))
+                        initiatedBy: user?.id??"",
+                        metaData: JSON.parse(JSON.stringify(metaData))
                     }
                 })
 

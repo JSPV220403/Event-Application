@@ -1,11 +1,9 @@
-// import cron, { schedule } from "node-cron";
 import { prisma } from "../prisma";
 import { Role } from "@prisma/client";
 import { sendMail } from "../services/mail.service";
 import { remainderEmailTemplate } from "../../templates/remainder.template";
 import { trace } from "node:console";
 import { eventPromotionTemplate } from "../../templates/eventPromotion.template";
-// import nodeCron from "node-cron";
 
 export const startRemainderJob = async () => {
   const cron = await import("node-cron");
@@ -22,7 +20,6 @@ export const remainderEmail = async () => {
 
     tomorrow.setDate(today.getDate() + 1);
 
-    //tomorrow = `${tomorrow.getFullYear()}-${tomorrow.getMonth()}-${tomorrow.getDate()}`;
 
     const eventSchedules = await prisma.event_Schedules.findMany({
       where: {
@@ -80,12 +77,9 @@ export const remainderEmail = async () => {
               },
             });
           });
-        } else {
-          console.log("People not interested on tomorrow event");
-        }
+        } 
       });
     }
-    //console.log("Tomorrow: ",tomorrow);
   } catch (e) {
     console.log(e);
   }

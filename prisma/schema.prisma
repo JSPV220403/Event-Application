@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,18 +13,12 @@ model Addresses{
   schedule_id String?
   address String @db.VarChar(255)
   pincode String @db.VarChar(12)
-  district_id String?
-  state_id String?
-  country_id String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   is_active Boolean @default(true)
 
   user Users? @relation(fields: [user_id], references: [id])
   schedules Event_Schedules? @relation(fields: [schedule_id], references: [id])
-  district Districts? @relation(fields: [district_id], references: [id])
-  state States? @relation(fields: [state_id], references: [id])
-  country Countries? @relation(fields: [country_id], references: [id])
 }
 
 model Approvals{
@@ -57,27 +46,9 @@ model Categories{
   event Events[]
 }
 
-model Countries{
-  id String @id @default(uuid())
-  name String @db.VarChar(50)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
 
-  state States[]
-  address Addresses[]
 
-}
 
-model Districts{
-  id String @id @default(uuid())
-  name String @db.VarChar(50)
-  state_id String @default(uuid())
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  state States @relation(fields: [state_id], references: [id])
-  address Addresses[]
-}
 
 enum Gender{
   MALE
@@ -139,18 +110,6 @@ model Sold_Tickets{
 
 }
 
-model States{
-  id String @id @default(uuid())
-  name String @db.VarChar(50)
-  country_id String @default(uuid())
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  country Countries @relation(fields: [country_id], references: [id])
-  district Districts[]
-  address Addresses[]
-
-}
 
 model Users{
   id String @id @default(uuid())
@@ -177,18 +136,18 @@ model Users{
 
 model Payments{
   id String @id @default(uuid())
+  ticket_id String?
   schedule_id String
-  ticket_id String?  @unique
-  order_id String?
-  payment_id String?
   initiatedBy String
-  amount Int?
   seat Int?
   status String?
-  metaData Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  order_id String?
+  payment_id String?
+  amount Int?
+  metaData Json?
 
-  user Users @relation(fields: [initiatedBy], references: [id])
   schedule Event_Schedules @relation(fields: [schedule_id], references: [id])
+  user Users @relation(fields: [initiatedBy], references: [id])
 }
