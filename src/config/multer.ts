@@ -1,15 +1,31 @@
-import multer from "multer"
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { randomUUID } from "crypto";
+
+const uploadPath = "eventImages";
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath);
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/")
+    cb(null, uploadPath);
   },
 
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname)
-  }
-})
+    const extension = path.extname(
+      file.originalname
+    );
+
+    cb(
+      null,
+      `event_${randomUUID()}${extension}`
+    );
+  },
+});
 
 export const upload = multer({
-  storage
-})
+  storage,
+});

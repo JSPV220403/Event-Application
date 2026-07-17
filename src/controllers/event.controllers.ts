@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import * as eventService from "../services/event.services"
 
 export const createEvent = async(req: Request, res:Response)=>{
-    const result= await eventService.createEvent(req?.body, (req as any).user);
+    const data= req?.body;
+    if(req?.file){
+        data.image= req?.file?.filename;
+    }
+    const result= await eventService.createEvent(data, (req as any).user);
     return res.status(result.status).json(result)
 }
 
@@ -17,7 +21,11 @@ export const cancelEvent = async(req: Request, res: Response)=>{
 }
 
 export const updateEvent = async(req:Request, res: Response)=>{
-    const result = await eventService.updateEvent(req?.body, (req as any).user);
+     const data= req?.body;
+    if(req?.file){
+        data.image= req?.file?.filename;
+    }
+    const result = await eventService.updateEvent(data, (req as any).user);
     return res.status(result.status).json(result)
 }
 

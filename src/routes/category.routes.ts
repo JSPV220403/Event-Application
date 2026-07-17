@@ -4,17 +4,17 @@ import express from "express";
 const router= express.Router()
 
 import authmiddleware from "../middleware/auth.middleware";
-
+import { apiLimiter } from "../middleware/rateLimitter.middleware";
 import * as categoryController from "../controllers/category.controllers"
 
-router.post("/createCategory", authmiddleware, categoryController.createCategory)
+router.post("/createCategory",authmiddleware,apiLimiter,  categoryController.createCategory)
 
-router.get("/listCateogry", authmiddleware, categoryController.listCategory)
+router.get("/listCateogry", authmiddleware, apiLimiter, categoryController.listCategory)
 
-router.get("/getCategoryById", authmiddleware, categoryController.getCategoryById)
+router.get("/getCategoryById", authmiddleware, apiLimiter, categoryController.getCategoryById)
 
-router.post("/updateCategory", authmiddleware, categoryController.updateCategory)
+router.post("/updateCategory", authmiddleware, apiLimiter,categoryController.updateCategory)
 
-router.delete("/deleteCategory", authmiddleware, categoryController.deleteCategory)
+router.delete("/deleteCategory",authmiddleware, apiLimiter,categoryController.deleteCategory)
 
 export default router;

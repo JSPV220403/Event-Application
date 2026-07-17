@@ -1,10 +1,8 @@
-import { json } from "node:stream/consumers";
 import {prisma} from "../prisma"
 import {Role} from "@prisma/client"
 
 export const organizersAdminsList = async(data:any, user:any)=>{
     try{
-
         if(user?.status == "PENDING" || user?.role != "ADMIN"){
             return {
                 status: 401,
@@ -49,8 +47,7 @@ export const organizersAdminsList = async(data:any, user:any)=>{
             status: 200,
             message: "Successful",
             data:filterResult
-        }
-        
+        }        
     }
     catch(e){
         console.log(e);
@@ -64,8 +61,8 @@ export const organizersAdminsList = async(data:any, user:any)=>{
 
 export const approval = async(data:any, user:any)=>{
     try{
-
-        if(user?.status=="PENDING" || user?.role != "ADMIN"){
+        
+        if(user?.status == "PENDING" || user?.role != "ADMIN"){
             return {
                 status: 401,
                 message: "UnAuthorized person"
@@ -82,7 +79,7 @@ export const approval = async(data:any, user:any)=>{
         if(!event){
             return {
                 status: 401,
-                messsage: "No event found"
+                message: "No event found"
             }
         }
 

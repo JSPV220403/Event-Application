@@ -1,5 +1,6 @@
 import { resourceUsage } from "node:process"
 import {prisma} from "../prisma"
+import { stat } from "node:fs"
 
 export const createCategory = async(data:any, user:any)=>{
     try{
@@ -8,6 +9,13 @@ export const createCategory = async(data:any, user:any)=>{
             return {
                 status: 401,
                 message: "you are not ADMIN/ORGANIZER"
+            }
+        }
+
+        if(data?.name==undefined){
+            return{
+                status:400,
+                message: "category name field is undefined"
             }
         }
         
@@ -75,6 +83,29 @@ export const listCategory = async()=>{
 
 export const updateCategory = async(data:any, user:any)=>{
     try{
+
+        if(user?.status=="PENDING"){
+            return {
+                status: 401,
+                message: "you are not ADMIN/ORGANIZER"
+            }
+        }
+
+         if(data?.id==undefined){
+            return{
+                status:400,
+                message: "category id field is undefined"
+            }
+        }
+
+        if(data?.name==undefined){
+            return{
+                status:400,
+                message: "category name field is undefined"
+            }
+        }
+
+
         const category = await prisma.categories.findUnique({
             where:{
                 id: data?.id,
@@ -139,6 +170,13 @@ export const deleteCategory = async(data:any, user:any)=>{
                 message: "you are not ADMIN/ORGANIZER"
             }
         }
+
+        if(data?.id==undefined){
+            return {
+                status: 400,
+                message: "category id field is undefined"
+            }
+        }
         
             const category= await prisma.categories.findUnique({
                 where:{
@@ -152,7 +190,7 @@ export const deleteCategory = async(data:any, user:any)=>{
                 }
             }
             if(category.created_by!= user?.id && user?.role!= "ADMIN"){
-                console.log("Created by someone. but, another one trying to delete")
+                // console.log("Created by someone. but, another one trying to delete")
                 return {
                     status: 401,
                     message: "UnAuthorized person"
@@ -186,6 +224,13 @@ export const getCategoryById = async(data:any, user:any)=>{
                 status: 401,
                 message: "UnAuthorized person",
                 data:{}
+            }
+        }
+        console.log(data);
+        if(data?.id==undefined){
+            return{
+                status:400,
+                message:"category id is undefined"
             }
         }
         const result = await prisma.categories.findUnique({

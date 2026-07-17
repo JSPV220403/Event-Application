@@ -2,8 +2,10 @@ import {prisma} from "../prisma"
 
 import { ticketBookingTemplate } from "../../templates/ticketBooking.template";
 import { ticketCancellationTemplate } from "../../templates/ticketCancellation.template";
+import { unsubscribeTemplate } from "../../templates/unsubscribe.template";
 
 import { sendMail } from "./mail.service";
+import { trace } from "node:console";
 
 export const bookTicket = async(data:any, user: any)=>{
     try{
@@ -190,7 +192,7 @@ export const bookHistory = async(user: any)=>{
         }
 
         const todayDate = new Date();
-        const historyWithCancelable = await history.map(ticket=>{
+        const historyWithCancelable = await history.map((ticket:any)=>{
             const scheduleDate =new Date(`${ticket.schedule.date.toISOString().split("T")[0]}T${ticket.schedule.time}`)
 
             return {
@@ -216,10 +218,100 @@ export const bookHistory = async(user: any)=>{
     
 }
 
-export const myTransaction = async(user:any)=>{
-    const transactions = await prisma.payments.findMany({
-        where:{
-            initiatedBy: user?.userId,
+export const transactionHistory= async(user:any)=>{
+   try{
+    console.log(user)
+     const transactions =
+      await prisma.payments.findMany({
+        where: {
+          initiatedBy: user.userId,
+        },
+
+        orderBy:{
+            createdAt:'desc'
+        },
+
+        include: {
+                    schedule:{
+                        include:{
+                            event:true,
+                            address:true
+                            }
+                        }
+                    }
+                
+        
+      });
+
+      console.log(transactions)
+
+      const formatedResult = transactions.map(transaction=>{
+        const metaData= JSON.parse(JSON.stringify(transaction?.metaData));
+
+        let res=  {
+            transactionId: transaction?.id,
+            orderId: transaction?.order_id,
+            amount: Number(metaData?.amount)/100,
+            seat: transaction?.seat,
+            status: transaction?.status,
+            transactionCreatedAt: (transaction?.createdAt).toDateString(),
+            address: transaction?.schedule?.address[0]?.address,
+            eventDate: (transaction?.schedule?.date).toDateString(),
+            eventTime: transaction?.schedule?.time,
+            eventName: transaction?.schedule?.event?.name
         }
-    })
+        return res;
+      })
+
+      return {
+        status:200,
+        message: 'Successfull',
+        data: formatedResult
+      }
+   }
+   catch(e){
+        console.log(e);
+        return{
+            status:500,
+            message:"Internal server error"
+        }
+    }
+}
+
+export const unSubscribe = async(userId:any)=>{
+    try{
+        const user= await prisma.users.findUnique({
+            where:{
+                id: userId,
+                is_active: true,
+            }
+        })
+
+        if(!user){
+            return{
+                status: 404,
+                message: "User not found",
+            }
+        }
+        await prisma.users.update({
+            data:{
+                is_subscribed:false
+            },
+            where:{
+                id:userId
+            },
+        })
+        const html= await unsubscribeTemplate(user?.name);
+        sendMail("We miss you lot", html);
+        return{
+            status:200,
+            message:"Unsubscribe successfull"
+        }
+    }catch(e){
+        console.log(e);
+        return{
+            status: 500,
+            message: "Internal server error"
+        }
+    }
 }

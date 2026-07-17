@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken"
 const authmiddleware= async(req:Request, res:Response,next:NextFunction)=>{
     try{
         const authHeader = req.headers.authorization
-
+        console.log(authHeader);
         if(!authHeader){
             return res.status(401).json({
                 success: false,
@@ -15,6 +15,7 @@ const authmiddleware= async(req:Request, res:Response,next:NextFunction)=>{
         const token = await authHeader.split(" ")[1]
         const decoded = jwt.verify(token, process.env.JWT_SECRET!);
         (req as any).user=decoded
+      
 
         next()
     }
