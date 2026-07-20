@@ -135,7 +135,6 @@ export const verifyPayment =
                 console.log("Else called!!!")
                 const metaData = await razorpay.orders.fetch(data.razorpay_order_id)
 
-
                 const res = await prisma.payments.create({
                     data: {
                         status: data?.payment_status,
