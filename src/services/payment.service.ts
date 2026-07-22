@@ -10,7 +10,6 @@ import * as userService from "../services/user.services"
 
 export const createOrder = async (
     data: any,
-    user: any
 ) => {
     try {
         const schedule =
@@ -36,12 +35,22 @@ export const createOrder = async (
                 amount: amount * 100,
                 currency: "INR"
             });
+        
+        if(order?.status=="created"){
+            return {
+                status: 200,
+                message: "Order created",
+                data: order
+            };
+        }
 
-        return {
-            status: 200,
-            message: "Order created",
-            data: order
-        };
+        else{
+             return {
+                status: 500,
+                message: "Razorpay id not created",
+                data: order
+            };
+        }
 
     } catch (e) {
 
@@ -61,7 +70,7 @@ export const verifyPayment =
         try {
             
             const paymentStatus = await razorpay.orders.fetch(data?.razorpay_order_id)
-            console.log(paymentStatus?.status)
+
             if (paymentStatus?.status == "paid") {                
                 const isValid =
                     verifySignature.verifySignature(
@@ -78,8 +87,6 @@ export const verifyPayment =
                     };
                 }
 
-                console.log("Successfull")
-
                 const schedule =
                     await prisma.event_Schedules.findFirst({
                         where: {
@@ -87,8 +94,6 @@ export const verifyPayment =
                             is_active: true
                         }
                     });
-
-                console.log("Schedule Retrived!!!");
 
                 if (!schedule) {
                     return {
@@ -101,14 +106,12 @@ export const verifyPayment =
                     Number(schedule.price) *
                     data.seats;
 
-                console.log("Amount: ", amount);
 
                 const metaData = await razorpay.orders.fetch(data.razorpay_order_id)
 
 
                 const ticket = await userService.bookTicket(data, user)
 
-                console.log("Data",data, "User",user)
                 const res = await prisma.payments.create({
                     data: {
                         ticket_id: paymentStatus?.status == "paid" ? (ticket?.data as any)?.id : "",
@@ -132,7 +135,6 @@ export const verifyPayment =
 
             else {
 
-                console.log("Else called!!!")
                 const metaData = await razorpay.orders.fetch(data.razorpay_order_id)
 
                 const res = await prisma.payments.create({

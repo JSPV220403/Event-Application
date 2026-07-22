@@ -1,6 +1,5 @@
 import { resourceUsage } from "node:process"
 import {prisma} from "../prisma"
-import { stat } from "node:fs"
 
 export const createCategory = async(data:any, user:any)=>{
     try{
@@ -25,8 +24,6 @@ export const createCategory = async(data:any, user:any)=>{
                 is_active:true
             }
         })
-
-        console.log("Category: ",isExist)
         
         if(isExist){
             return {
@@ -76,7 +73,6 @@ export const listCategory = async()=>{
         return {
             status: 500,
             message: "Internal server error",
-            data:[]
         }
     }
 }
@@ -190,7 +186,6 @@ export const deleteCategory = async(data:any, user:any)=>{
                 }
             }
             if(category.created_by!= user?.id && user?.role!= "ADMIN"){
-                // console.log("Created by someone. but, another one trying to delete")
                 return {
                     status: 401,
                     message: "UnAuthorized person"
@@ -223,7 +218,6 @@ export const getCategoryById = async(data:any, user:any)=>{
             return {
                 status: 401,
                 message: "UnAuthorized person",
-                data:{}
             }
         }
         console.log(data);
@@ -244,7 +238,6 @@ export const getCategoryById = async(data:any, user:any)=>{
             return {
                 status: 404,
                 message: "Category not found",
-                data:{}
             }
         }
 

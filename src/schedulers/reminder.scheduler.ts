@@ -47,7 +47,6 @@ export const remainderEmail = async () => {
         });
         if (tickets.length > 0) {
           tickets.map(async (ticket: any) => {
-            console.log(ticket);
             const user = await prisma.users.findFirst({
               where: {
                 id: ticket?.user_id,
@@ -84,7 +83,6 @@ export const remainderEmail = async () => {
     console.log(e);
   }
 };
-
 
 export const promotionMail = async()=>{
     try{

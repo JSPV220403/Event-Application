@@ -5,12 +5,9 @@ import { ticketCancellationTemplate } from "../../templates/ticketCancellation.t
 import { unsubscribeTemplate } from "../../templates/unsubscribe.template";
 
 import { sendMail } from "./mail.service";
-import { trace } from "node:console";
 
 export const bookTicket = async(data:any, user: any)=>{
     try{
-
-        console.log("Data: ",data," User: ",user);
 
         const isExist= await prisma.event_Schedules.findUnique({
             where:{
@@ -25,7 +22,7 @@ export const bookTicket = async(data:any, user: any)=>{
                 data:{}
             }
         }
-        console.log("Schedule: ",isExist);
+
         const actualEvent= await prisma.events.findFirst(
             {
                 where:{
@@ -33,13 +30,13 @@ export const bookTicket = async(data:any, user: any)=>{
                 }
             }
         )
-        console.log("Event: ",actualEvent);
+
         const scheduleAddress= await prisma.addresses.findFirst({
             where:{
                 schedule_id:data?.id
             }
         })
-        console.log("Actual Address: ",scheduleAddress);
+
         if(data?.seats<=0){
             return{
                 status: 400,
@@ -66,6 +63,7 @@ export const bookTicket = async(data:any, user: any)=>{
             seat_count:true
         }
     })
+    
     let sold_seats= tickets_sold._sum.seat_count??0;
 
     if(Number(total_tickets?.venue_capacity!) >= (sold_seats + Number(data?.seats))){
@@ -79,7 +77,7 @@ export const bookTicket = async(data:any, user: any)=>{
             }
         )
         const eventDate= `${isExist?.date.getDate()}-${isExist?.date.getMonth()}-${isExist?.date.getFullYear()}` 
-        console.log("Actual Date: ",eventDate);
+
         const html= await ticketBookingTemplate(user?.name??"", actualEvent?.name??"", eventDate, isExist?.time, data?.seats, scheduleAddress?.address??"" )
         await sendMail("Enjoyment on the way!!!", html)
         return {
@@ -137,8 +135,6 @@ export const cancelTicket = async(data:any, user: any)=>{
             }
         })
 
-
-        console.log("Event Schedule: ",eventSchedule,"\nActual Event: ",actualEvent);
         if(ticket){
             const eventDate = `${eventSchedule?.date.getDate()}-${eventSchedule?.date.getMonth()}-${eventSchedule?.date.getFullYear()}` 
             const html= await ticketCancellationTemplate(user?.name,actualEvent?.name??"", eventDate, eventSchedule?.time??"", ticket?.seat_count, eventSchedule?.address[0]?.address??"");
@@ -242,8 +238,6 @@ export const transactionHistory= async(user:any)=>{
                 
         
       });
-
-      console.log(transactions)
 
       const formatedResult = transactions.map(transaction=>{
         const metaData= JSON.parse(JSON.stringify(transaction?.metaData));

@@ -12,9 +12,6 @@ import { registrationTemplate } from "../../templates/registration.template";
 
 import { sendMail } from "./mail.service";
 
-import { resend } from "../config/resend";
-
-import { connect } from "node:http2"
 
 
 export const register = async(data:any)=>{
@@ -177,7 +174,6 @@ export const register = async(data:any)=>{
 export const login= async(data:any)=>{
     try{
 
-        console.log("Request body: ", data);
 
         if(data?.email==undefined){
             return {
