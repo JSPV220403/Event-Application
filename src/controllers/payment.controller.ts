@@ -10,7 +10,6 @@ export const createOrder = async (
     const result =
         await paymentService.createOrder(
             req.body,
-            (req as any).user
         );
     res.status(result.status).json(result)
 };
