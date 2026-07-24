@@ -1,75 +1,94 @@
-const categoryServiceTest:any={}
+import { userInfo } from "node:os";
+import { prisma } from "../prisma";
 
-categoryServiceTest.user={
-    id:"ae8882db-b577-4230-91fb-f72a7b353386",
-    name:"user1",
-    phoneNumber:"1221212212",
-    email:"user1@gmail.com",
-    role:"USER",
-    status:"PENDING",
-};
+async function getCategoryTestData() {
+    const User = await prisma.users.findFirst({
+        where:{
+            email:"user1@gmail.com"
+        }
+    })
 
-categoryServiceTest.approvedOrganizer={
-    id:"8751959b-85d4-4f02-99de-57dae86ff6de",
-    name:"Organizer1",
-    phoneNumber:"9090980808",
-    email:"organizer1@gmail.com",
-    role:"ORGANIZER",
-    status:"APPROVED",
-};
+    const Organizer = await prisma.users.findFirst({
+        where:{
+            email:"organizer1@gmail.com"
+        }
+    })
 
-categoryServiceTest.approvedOrganizer2={
-    id:"0a50e2eb-885c-405b-a301-e73f2bfc65b0",
-    name:"organizerTest1",
-    phoneNumber:"+91 12345 67999",
-    email:"organizerTest1@gmail.com",
-    role:"ORGANIZER",
-    status:"APPROVED",
-};
+    const Admin = await prisma.users.findFirst({
+        where:{
+            email:"admin1@gmail.com"
+        }
+    })
 
-categoryServiceTest.pendingOrganizer={
-    id:"eaabf406-e86d-4c6c-ad92-c039b66bff65",
-    name:"Organiiizer2",
-    phoneNumber:"1233211231",
-    email:"organizer2@gmail.com",
-    role:"ORGANIZER",
-    status:"PENDING",
-};
+    const pendingOrganizer = await prisma.users.findFirst({
+        where:{
+            email:"organizer2@gmail.com"
+        }
+    })
 
-categoryServiceTest.pendingAdmin={
-    id:"672593ca-face-4250-b9be-ae2437bd57b5",
-    name:"admin2",
-    phoneNumber:"9009000909",
-    email:"admin2@gmail.com",
-    role:"ADMIN",
-    status:"PENDING",
-};
+    const pendingAdmin = await prisma.users.findFirst({
+        where:{
+            email:"admin2@gmail.com"
+        }
+    })
 
-// categoryServiceTest.validAdmin={
-//     id:"7c2294c7-3efc-4690-9371-208688c1c240",
-//     name:"admin1",
-//     phoneNumber:"9999900000",
-//     email:"admin1@gmail.com",
-//     role:"ADMIN",
-//     status:"APPROVED",
-// };
+    const category = await prisma.categories.findFirst({
+        where:{
+            name:"Pottery"
+        }
+    })
 
-categoryServiceTest.invalidCategoryId={
-    id:"123",
-    name:"dance"
+    return {
+        user:{
+            id:User?.id,
+            name:User?.name,
+            phoneNumber:User?.phone_number,
+            email: User?.email,
+            role:User?.role,
+            status:"PENDING",
+        },
+        organizer: {
+            id: Organizer?.id,
+            name: Organizer?.name,
+            phoneNumber:Organizer?.phone_number,
+            email:Organizer?.email,
+            role:Organizer?.role,
+            status:"APPROVED",
+        },
+        admin: Admin,
+        pendingOrganizer:{
+            id: pendingOrganizer?.id,
+            name:pendingOrganizer?.name,
+            phoneNumber: pendingOrganizer?.phone_number,
+            email: pendingOrganizer?.email,
+            role:pendingOrganizer?.role,
+            status:"PENDING",
+        },
+        pendingAdmin:{
+            id: pendingAdmin?.id,
+            name: pendingAdmin?.name,
+            phoneNumber: pendingAdmin?.phone_number,
+            email: pendingAdmin?.email,
+            role: pendingAdmin?.role,
+            status:"PENDING",
+        },
+        invalidCategoryId:{
+            id:"123",
+            name:"dance"
+        },
+
+        withoutCategoryId:{
+            name:"dance"
+        },
+
+        existingName:{
+            id: category?.id,
+            name: category?.name
+        }
+
+    }
 }
 
-categoryServiceTest.withoutId={
-    name:"dance"
-}
-categoryServiceTest.validIdWithoutName={
-    id:"76f4680c-838c-4350-8999-2c057d38e603"
-}
-
-categoryServiceTest.validIdExistingName={
-    id:"76f4680c-838c-4350-8999-2c057d38e603",
-    name:"pottery"
-}
 
 
-export default categoryServiceTest;
+export default getCategoryTestData;
