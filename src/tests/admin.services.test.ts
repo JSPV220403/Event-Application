@@ -142,8 +142,17 @@ describe("Organizer or Admin Approval", ()=>{
 })
 
 describe("Organizer or Admin Approval", ()=>{
-    test("It should return 400 for trying to approve already approved event", async()=>{
-        const result= await organizerAdminApproval((await adminTestData).alreadyApprovedOrganizerOrAdminId,(await adminTestData).admin)
+    test("It should return 200 ", async()=>{
+        const result= await organizerAdminApproval((await adminTestData).organizer,(await adminTestData).admin)
+        assert.strictEqual(result.status, 200);
+        // assert.strictEqual(result.message, "Already Approved")
+    })
+})
+
+
+describe("Organizer or Admin Approval", ()=>{
+    test("It should return 400 for trying to approve already approved Organizer/Admin", async()=>{
+        const result= await organizerAdminApproval((await adminTestData).organizer,(await adminTestData).admin)
         assert.strictEqual(result.status, 400);
         assert.strictEqual(result.message, "Already Approved")
     })
